@@ -42,7 +42,7 @@ export async function POST(request: Request, { params }: { params: { matchId: st
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const eventsText = events?.length 
-      ? events.map((e: any) => `- Minute ${e.minute}: ${e.event_type} by ${e.player?.name}`).join('\n')
+      ? events.map((e: any) => `- ${e.type || e.event_type || 'Event'}: ${e.player?.name || 'Unknown Player'}`).join('\n')
       : 'No notable events recorded.';
 
     const prompt = `

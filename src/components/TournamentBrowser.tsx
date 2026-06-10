@@ -148,18 +148,6 @@ export default function TournamentBrowser({ tournaments }: Props) {
             and more — all in one place.
           </p>
 
-          {/* Search bar */}
-          <div className="relative mt-8 max-w-lg">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#64748B]" />
-            <input
-              id="tournament-search"
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tournaments, venues, organisers…"
-              className="w-full pl-12 pr-4 py-3.5 bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl text-sm text-white placeholder:text-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#00D084]/50 focus:border-[#00D084]/50 transition-all"
-            />
-          </div>
         </div>
       </header>
 
@@ -182,9 +170,6 @@ export default function TournamentBrowser({ tournaments }: Props) {
                       : 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#374151]'
                   }`}
                 >
-                  {tab !== 'All' && (
-                    <span className="mr-1">{SPORT_EMOJI[tab]}</span>
-                  )}
                   {tab}
                 </button>
               ))}
@@ -197,7 +182,7 @@ export default function TournamentBrowser({ tournaments }: Props) {
               </span>
               {STATUS_TABS.map((tab) => {
                 const dotColors: Record<string, string> = {
-                  Live: 'bg-amber-400',
+                  Live: 'bg-green-500',
                   Upcoming: 'bg-blue-400',
                   Completed: 'bg-gray-400',
                 };
@@ -295,10 +280,10 @@ export default function TournamentBrowser({ tournaments }: Props) {
               <span>© {new Date().getFullYear()}</span>
             </div>
             <Link
-              href="/admin/login"
-              className="text-[#94A3B8] hover:text-[#00D084] transition-colors font-medium"
+              href="/host"
+              className="inline-flex items-center justify-center bg-[#00D084] text-[#0A1628] hover:bg-[#00B871] font-bold px-4 py-2 rounded-xl text-sm transition-all duration-200 shadow-sm"
             >
-              Organiser Login →
+              Host Tournament
             </Link>
           </div>
         </div>
@@ -320,9 +305,9 @@ function TournamentCard({ tournament: t }: { tournament: Tournament }) {
     { bg: string; text: string; dot: string; pulse: boolean }
   > = {
     Live: {
-      bg: 'bg-amber-50 border-amber-200',
-      text: 'text-amber-700',
-      dot: 'bg-amber-400',
+      bg: 'bg-green-50 border-green-200',
+      text: 'text-green-700',
+      dot: 'bg-green-500',
       pulse: true,
     },
     Upcoming: {
@@ -343,14 +328,14 @@ function TournamentCard({ tournament: t }: { tournament: Tournament }) {
 
   return (
     <Link
-      href={`/${t.slug}`}
+      href={`/t/${t.slug}`}
       className="group relative bg-white rounded-xl border border-[#E8ECF1] hover:border-[#00D084]/40 hover:shadow-lg hover:shadow-[#00D084]/5 transition-all duration-300 overflow-hidden flex flex-col"
     >
       {/* Top accent bar */}
       <div
         className={`h-1 w-full ${
           status === 'Live'
-            ? 'bg-gradient-to-r from-amber-400 to-orange-400'
+            ? 'bg-gradient-to-r from-green-400 to-emerald-500'
             : status === 'Upcoming'
             ? 'bg-gradient-to-r from-blue-400 to-indigo-400'
             : 'bg-gradient-to-r from-gray-300 to-gray-400'
@@ -358,11 +343,11 @@ function TournamentCard({ tournament: t }: { tournament: Tournament }) {
       />
 
       <div className="p-5 flex flex-col flex-1">
-        {/* Header row: emoji + status */}
+        {/* Header row: sport label + status */}
         <div className="flex items-start justify-between mb-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F8FAFC] text-xl border border-[#E8ECF1]">
-            {emoji}
-          </div>
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border border-[#E8ECF1] px-2.5 py-1.5 rounded-lg flex items-center justify-center">
+            {sportLabel}
+          </span>
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${sc.bg} ${sc.text}`}
           >

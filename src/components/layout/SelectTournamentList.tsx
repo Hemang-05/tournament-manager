@@ -59,7 +59,9 @@ export default function SelectTournamentList({ tournaments }: { tournaments: Tou
           >
             <div>
               <div className="flex items-start justify-between mb-4">
-                <div className="text-3xl bg-slate-50 p-2.5 rounded-xl border border-slate-100">{emoji}</div>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg flex items-center justify-center">
+                  {t.sport || 'other'}
+                </span>
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusColors[t.status] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
                   {statusVal}
                 </span>

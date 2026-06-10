@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Trophy } from "lucide-react";
 
 interface PublicNavbarProps {
   tournamentName: string;
@@ -30,11 +30,11 @@ export default function PublicNavbar({ tournamentName }: PublicNavbarProps) {
           <div className="flex flex-shrink-0 items-center">
             <Link
               href="/"
-              className="flex items-center gap-2 text-white hover:opacity-90 transition-opacity active:scale-[0.98]"
+              className="flex items-center gap-2.5 text-white hover:opacity-90 transition-opacity active:scale-[0.98]"
             >
-              <span className="text-2xl" role="img" aria-label="football">
-                ⚽
-              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#00D084] text-[#0A1628]">
+                <Trophy className="h-4 w-4" />
+              </div>
               <span 
                 className="text-lg font-bold tracking-tight text-white sm:text-xl"
                 style={{ fontFamily: "Georgia, serif" }}

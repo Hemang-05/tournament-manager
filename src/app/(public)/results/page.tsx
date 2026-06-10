@@ -166,7 +166,7 @@ export default async function ResultsPage() {
         const player = playersMap.get(event.player_id);
         const name = player ? player.name.split(" ")[0] : "Unknown";
         const isOwnGoal = event.type?.toLowerCase() === "own_goal";
-        return `${name} ${event.minute}'${isOwnGoal ? " (OG)" : ""}`;
+        return `${name}${isOwnGoal ? " (OG)" : ""}`;
       });
 
     return scorers.join(", ");
@@ -290,7 +290,7 @@ export default async function ResultsPage() {
                               
                               {motmPlayer && (
                                 <span className="inline-flex items-center gap-1 rounded-md bg-[#FFD166]/10 border border-[#FFD166]/30 px-2 py-0.5 font-bold text-[#D97706]">
-                                  🏆 MoTM: {motmPlayer.name}
+                                  MoTM: {motmPlayer.name}
                                 </span>
                               )}
                             </div>

@@ -16,22 +16,27 @@ export async function POST(
   try {
     const supabase = createServerClient();
     const body = await request.json();
-    const { player_id, event_type, minute, team_id } = body;
+    let { player_id, event_type, minute, team_id } = body;
 
-    if (!player_id || !event_type || minute === undefined || minute === null) {
+    if (minute === undefined || minute === null) {
+      minute = 1;
+    }
+
+    if (!player_id || !event_type) {
       return NextResponse.json(
-        { error: 'player_id, event_type, and minute are required' },
+        { error: 'player_id and event_type are required' },
         { status: 400 }
       );
     }
 
     // 1. Insert the match event
+    const dbType = event_type.toLowerCase().replace(/\s+/g, '_');
     const { data: event, error: eventError } = await supabase
       .from('match_events')
       .insert({
         match_id: params.matchId,
         player_id,
-        event_type,
+        type: dbType,
         minute: parseInt(minute),
       })
       .select('*, player:player_id(name, team_id)')
@@ -188,7 +193,7 @@ export async function DELETE(
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
     }
 
-    const eventTypeLower = event_type?.toLowerCase();
+    const eventTypeLower = event_type?.toLowerCase().replace(/_/g, ' ');
 
     // Reverse score changes
     if (eventTypeLower === 'goal') {

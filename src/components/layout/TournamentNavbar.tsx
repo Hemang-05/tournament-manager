@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Trophy } from 'lucide-react';
 
 interface CMSPage {
   title: string;
@@ -21,19 +21,9 @@ interface TournamentNavbarProps {
   cmsPages: CMSPage[];
 }
 
-const SPORT_EMOJI: Record<string, string> = {
-  Football: '⚽',
-  Cricket: '🏏',
-  Basketball: '🏀',
-  Pickleball: '🏓',
-  Other: '🎯',
-};
-
 export default function TournamentNavbar({ tournament, cmsPages }: TournamentNavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-
-  const emoji = SPORT_EMOJI[tournament.sport || 'Other'] || '🎯';
 
   const baseLinks = [
     { name: 'Table', href: `/t/${tournament.slug}/table` },
@@ -62,11 +52,11 @@ export default function TournamentNavbar({ tournament, cmsPages }: TournamentNav
           <div className="flex flex-shrink-0 items-center">
             <Link
               href={`/t/${tournament.slug}`}
-              className="flex items-center gap-2 text-white hover:opacity-90 transition-opacity active:scale-[0.98]"
+              className="flex items-center gap-2.5 text-white hover:opacity-90 transition-opacity active:scale-[0.98]"
             >
-              <span className="text-2xl" role="img" aria-label="sport emoji">
-                {emoji}
-              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#00D084] text-[#0A1628]">
+                <Trophy className="h-4.5 w-4.5" />
+              </div>
               <span
                 className="text-lg font-bold tracking-tight text-white sm:text-xl truncate max-w-[200px] sm:max-w-xs"
                 style={{ fontFamily: 'Georgia, serif' }}

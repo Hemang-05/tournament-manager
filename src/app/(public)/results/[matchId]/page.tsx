@@ -132,7 +132,7 @@ export default async function MatchDetailPage({
     const t = type?.toLowerCase();
     if (t === "goal") {
       return {
-        icon: "⚽",
+        icon: "Goal",
         label: "Goal",
         bgColor: "bg-green-50 text-green-700 border-green-200",
         pillColor: "bg-green-500",
@@ -140,7 +140,7 @@ export default async function MatchDetailPage({
     }
     if (t === "own_goal") {
       return {
-        icon: "🅾",
+        icon: "Own Goal",
         label: "Own Goal",
         bgColor: "bg-orange-50 text-orange-700 border-orange-200",
         pillColor: "bg-orange-500",
@@ -148,7 +148,7 @@ export default async function MatchDetailPage({
     }
     if (t === "yellow_card") {
       return {
-        icon: "🟨",
+        icon: "Yellow Card",
         label: "Yellow Card",
         bgColor: "bg-amber-50 text-amber-700 border-amber-200",
         pillColor: "bg-amber-500",
@@ -156,14 +156,14 @@ export default async function MatchDetailPage({
     }
     if (t === "red_card") {
       return {
-        icon: "🟥",
+        icon: "Red Card",
         label: "Red Card",
         bgColor: "bg-red-50 text-red-700 border-red-200",
         pillColor: "bg-red-500",
       };
     }
     return {
-      icon: "⚙",
+      icon: "Event",
       label: "Event",
       bgColor: "bg-slate-50 text-slate-700 border-slate-200",
       pillColor: "bg-slate-500",
@@ -296,10 +296,7 @@ export default async function MatchDetailPage({
                     {/* Timeline dot */}
                     <span className={`absolute -left-[31px] flex h-4 w-4 items-center justify-center rounded-full border-2 border-white ${meta.pillColor} ring-4 ring-slate-50 transition-transform group-hover:scale-110`} />
 
-                    {/* Minute Box */}
-                    <span className="font-mono text-sm font-black text-[#64748B] w-10 text-right flex-shrink-0">
-                      {event.minute}'
-                    </span>
+
 
                     {/* Event Detail Card */}
                     <div className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm transition-all ${meta.bgColor}`}>

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { TournamentProvider } from '@/components/TournamentProvider';
 import TournamentNavbar from '@/components/layout/TournamentNavbar';
 import { mapTournamentDbToUi } from '@/lib/tournament';
+import Link from 'next/link';
 
 export default async function TournamentSlugLayout({
   children,
@@ -48,13 +49,16 @@ export default async function TournamentSlugLayout({
             <div className="flex flex-col items-center justify-between gap-4 sm:flex-row text-center sm:text-left">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-sm text-[#64748B]">
                 <span className="font-semibold text-[#0F172A]" style={{ fontFamily: 'Georgia, serif' }}>
-                  🏆 {tournament.name}
+                  {tournament.name}
                 </span>
                 <span>•</span>
                 <span>© {new Date().getFullYear()} All rights reserved.</span>
               </div>
-              <div className="text-sm text-[#64748B]">
-                Powered by <span className="font-bold text-[#00D084]">TournamentMgr</span>
+              <div className="text-sm text-[#64748B] flex items-center gap-4">
+                <Link href="/host" className="font-semibold text-[#00D084] hover:underline">
+                  Host Tournament
+                </Link>
+                <span>Powered by TournamentMgr</span>
               </div>
             </div>
           </div>

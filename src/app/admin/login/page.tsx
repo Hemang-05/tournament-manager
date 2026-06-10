@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Loader2, Eye, EyeOff, Trophy } from 'lucide-react';
 
 export default function AdminLogin() {
-  const [username, setUsername] = useState('');
+  const [slug, setSlug] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -22,7 +22,7 @@ export default function AdminLogin() {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: slug, password }),
       });
 
       const data = await res.json();
@@ -79,16 +79,16 @@ export default function AdminLogin() {
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label htmlFor="login-username" className="block text-sm font-semibold text-[#374151] mb-1.5">
-                Username
+                Tournament Slug
               </label>
               <input
                 id="login-username"
                 type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="your_username"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder="e.g. premier-league-2026"
                 autoComplete="username"
-                className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all"
+                className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all font-mono"
                 required
               />
             </div>
@@ -141,7 +141,7 @@ export default function AdminLogin() {
               <div className="w-full border-t border-[#E2E8F0]" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-white px-3 text-[#94A3B8] font-medium">New organiser?</span>
+              <span className="bg-white px-3 text-[#94A3B8] font-medium">Want to host a new tournament?</span>
             </div>
           </div>
 
@@ -150,7 +150,7 @@ export default function AdminLogin() {
             href="/admin/onboarding"
             className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-lg border border-[#E2E8F0] text-sm font-semibold text-[#374151] hover:bg-[#F8FAFC] hover:border-[#CBD5E1] transition-all group"
           >
-            <span>Create a tournament account</span>
+            <span>Create a tournament</span>
             <svg className="h-3.5 w-3.5 text-[#94A3B8] group-hover:text-[#00D084] group-hover:translate-x-0.5 transition-all" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
             </svg>

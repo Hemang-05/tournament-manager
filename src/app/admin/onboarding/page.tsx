@@ -84,16 +84,13 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  /* ── Step 1: Account ── */
-  const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
-  const [usernameError, setUsernameError] = useState('');
+  /* ── Password ── */
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  /* ── Step 2: Tournament ── */
+  /* ── Tournament ── */
   const [tournamentName, setTournamentName] = useState('');
   const [slug, setSlug] = useState('');
   const [slugManual, setSlugManual] = useState(false);
@@ -105,7 +102,7 @@ export default function Onboarding() {
   const [venueName, setVenueName] = useState('');
   const [matchDays, setMatchDays] = useState<string[]>(['Sat', 'Sun']);
   const [maxMatchesPerDay, setMaxMatchesPerDay] = useState(4);
-  const [maxTeams, setMaxTeams] = useState(8);
+  const [maxTeams, setMaxTeams] = useState('8');
 
   /* ── Step 3: Rules ── */
   const [rules, setRules] = useState(SPORT_RULES.Football);
@@ -123,19 +120,6 @@ export default function Onboarding() {
     setRules(SPORT_RULES[newSport]);
   };
 
-  /* Username validation */
-  const validateUsername = useCallback((value: string) => {
-    const cleaned = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-    setUsername(cleaned);
-    if (cleaned.length > 0 && cleaned.length < 3) {
-      setUsernameError('Username must be at least 3 characters');
-    } else if (/^\d/.test(cleaned)) {
-      setUsernameError('Username cannot start with a number');
-    } else {
-      setUsernameError('');
-    }
-  }, []);
-
   const toggleDay = (day: string) => {
     setMatchDays(prev =>
       prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
@@ -146,19 +130,20 @@ export default function Onboarding() {
   const handleNext = () => {
     setError('');
     if (step === 1) {
-      if (!name.trim()) { setError('Full name is required'); return; }
-      if (username.length < 3) { setError('Username must be at least 3 characters'); return; }
-      if (usernameError) { setError(usernameError); return; }
-      if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
-      if (password !== confirmPassword) { setError('Passwords do not match'); return; }
-    }
-    if (step === 2) {
       if (!tournamentName.trim()) { setError('Tournament name is required'); return; }
       if (sport === 'Other' && !sportCustom.trim()) { setError('Please enter your sport name'); return; }
       if (!playersPerTeam || isNaN(Number(playersPerTeam)) || Number(playersPerTeam) <= 0) {
         setError('Players per Team is a required positive number');
         return;
       }
+      if (!maxTeams || isNaN(Number(maxTeams)) || Number(maxTeams) < 2 || Number(maxTeams) > 64) {
+        setError('Max Teams must be a number between 2 and 64');
+        return;
+      }
+    }
+    if (step === 2) {
+      if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
+      if (password !== confirmPassword) { setError('Passwords do not match'); return; }
     }
     setStep(s => s + 1);
   };
@@ -168,12 +153,14 @@ export default function Onboarding() {
     setLoading(true);
     setError('');
 
+    const generatedSlug = slug || slugify(tournamentName);
+
     try {
-      // 1. Create organiser account
+      // 1. Create organiser account with username = slug, name = Admin
       const signupRes = await fetch('/api/admin/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, username, password }),
+        body: JSON.stringify({ name: 'Admin', username: generatedSlug, password }),
       });
 
       const signupData = await signupRes.json();
@@ -190,7 +177,7 @@ export default function Onboarding() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: tournamentName,
-          slug: slug || undefined,
+          slug: generatedSlug,
           sport: sport === 'Other' ? 'Other' : sport,
           sport_custom: sport === 'Other' ? sportCustom : null,
           players_per_team: Number(playersPerTeam),
@@ -199,7 +186,7 @@ export default function Onboarding() {
           venue_name: venueName || null,
           match_days: matchDays,
           max_matches_per_day: maxMatchesPerDay,
-          max_teams: maxTeams,
+          max_teams: Number(maxTeams),
           rules_content: rules,
           is_public: true,
         }),
@@ -223,7 +210,7 @@ export default function Onboarding() {
   };
 
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const stepLabels = ['Your Account', 'Tournament', 'Rules'];
+  const stepLabels = ['Tournament', 'Access Password', 'Rules'];
   const formats = [
     { value: 'League', label: 'League', desc: 'Round-robin format' },
     { value: 'Knockout', label: 'Knockout', desc: 'Single elimination' },
@@ -289,146 +276,8 @@ export default function Onboarding() {
               </div>
             )}
 
-            {/* ═══════════════ STEP 1: Account ═══════════════ */}
+            {/* ═══════════════ STEP 1: Tournament Details ═══════════════ */}
             {step === 1 && (
-              <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
-                <div>
-                  <h2 className="text-xl font-bold text-[#0F172A]" style={{ fontFamily: 'Georgia, serif' }}>
-                    Create your account
-                  </h2>
-                  <p className="text-sm text-[#64748B] mt-1">
-                    Set up your organiser credentials to get started.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  {/* Full Name */}
-                  <div>
-                    <label htmlFor="onb-name" className="block text-sm font-semibold text-[#374151] mb-1.5">
-                      Full Name
-                    </label>
-                    <input
-                      id="onb-name"
-                      type="text"
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      placeholder="John Smith"
-                      className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all"
-                      required
-                    />
-                  </div>
-
-                  {/* Username */}
-                  <div>
-                    <label htmlFor="onb-username" className="block text-sm font-semibold text-[#374151] mb-1.5">
-                      Username
-                    </label>
-                    <input
-                      id="onb-username"
-                      type="text"
-                      value={username}
-                      onChange={e => validateUsername(e.target.value)}
-                      onBlur={() => validateUsername(username)}
-                      placeholder="john_smith"
-                      autoComplete="username"
-                      className={`w-full px-3.5 py-2.5 bg-[#F8FAFC] border rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 transition-all ${
-                        usernameError
-                          ? 'border-red-300 focus:ring-red-400/40 focus:border-red-400'
-                          : 'border-[#E2E8F0] focus:ring-[#00D084]/40 focus:border-[#00D084]'
-                      }`}
-                      required
-                    />
-                    {usernameError && (
-                      <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        {usernameError}
-                      </p>
-                    )}
-                    {username && !usernameError && (
-                      <p className="text-xs text-[#94A3B8] mt-1.5">
-                        Lowercase letters, numbers, and underscores only
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Password fields */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="onb-password" className="block text-sm font-semibold text-[#374151] mb-1.5">
-                        Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="onb-password"
-                          type={showPassword ? 'text' : 'password'}
-                          value={password}
-                          onChange={e => setPassword(e.target.value)}
-                          placeholder="Min. 6 characters"
-                          autoComplete="new-password"
-                          className="w-full px-3.5 py-2.5 pr-10 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B] transition-colors"
-                          tabIndex={-1}
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label htmlFor="onb-confirm" className="block text-sm font-semibold text-[#374151] mb-1.5">
-                        Confirm Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="onb-confirm"
-                          type={showConfirm ? 'text' : 'password'}
-                          value={confirmPassword}
-                          onChange={e => setConfirmPassword(e.target.value)}
-                          placeholder="Re-enter password"
-                          autoComplete="new-password"
-                          className={`w-full px-3.5 py-2.5 pr-10 bg-[#F8FAFC] border rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 transition-all ${
-                            confirmPassword && confirmPassword !== password
-                              ? 'border-red-300 focus:ring-red-400/40 focus:border-red-400'
-                              : 'border-[#E2E8F0] focus:ring-[#00D084]/40 focus:border-[#00D084]'
-                          }`}
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirm(!showConfirm)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B] transition-colors"
-                          tabIndex={-1}
-                        >
-                          {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                      {confirmPassword && confirmPassword !== password && (
-                        <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          Passwords don&apos;t match
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleNext}
-                  disabled={!name || !username || !password || !confirmPassword}
-                  className="w-full mt-4 bg-[#00D084] hover:bg-[#00B871] active:scale-[0.98] text-white font-semibold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none shadow-sm shadow-[#00D084]/20"
-                >
-                  <span>Next</span>
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-
-            {/* ═══════════════ STEP 2: Tournament Details ═══════════════ */}
-            {step === 2 && (
               <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
                 <div>
                   <h2 className="text-xl font-bold text-[#0F172A]" style={{ fontFamily: 'Georgia, serif' }}>
@@ -597,13 +446,106 @@ export default function Onboarding() {
                     </label>
                     <input
                       id="onb-maxteams"
-                      type="number"
-                      min="2"
-                      max="64"
+                      type="text"
                       value={maxTeams}
-                      onChange={e => setMaxTeams(parseInt(e.target.value) || 2)}
-                      className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all"
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (val === '' || /^\d+$/.test(val)) {
+                          setMaxTeams(val);
+                        }
+                      }}
+                      placeholder="8"
+                      className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all"
                     />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleNext}
+                  disabled={!tournamentName || !playersPerTeam || !maxTeams}
+                  className="w-full mt-4 bg-[#00D084] hover:bg-[#00B871] active:scale-[0.98] text-white font-semibold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none shadow-sm shadow-[#00D084]/20"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
+            {/* ═══════════════ STEP 2: Access Password ═══════════════ */}
+            {step === 2 && (
+              <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
+                <div>
+                  <h2 className="text-xl font-bold text-[#0F172A]" style={{ fontFamily: 'Georgia, serif' }}>
+                    Access Password
+                  </h2>
+                  <p className="text-sm text-[#64748B] mt-1">
+                    Set a password to manage this tournament. Keep it secure.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Password fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="onb-password" className="block text-sm font-semibold text-[#374151] mb-1.5">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="onb-password"
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          placeholder="Min. 6 characters"
+                          autoComplete="new-password"
+                          className="w-full px-3.5 py-2.5 pr-10 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B] transition-colors"
+                          tabIndex={-1}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="onb-confirm" className="block text-sm font-semibold text-[#374151] mb-1.5">
+                        Confirm Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="onb-confirm"
+                          type={showConfirm ? 'text' : 'password'}
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          placeholder="Re-enter password"
+                          autoComplete="new-password"
+                          className={`w-full px-3.5 py-2.5 pr-10 bg-[#F8FAFC] border rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 transition-all ${
+                            confirmPassword && confirmPassword !== password
+                              ? 'border-red-300 focus:ring-red-400/40 focus:border-red-400'
+                              : 'border-[#E2E8F0] focus:ring-[#00D084]/40 focus:border-[#00D084]'
+                          }`}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirm(!showConfirm)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B] transition-colors"
+                          tabIndex={-1}
+                        >
+                          {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      {confirmPassword && confirmPassword !== password && (
+                        <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          Passwords don&apos;t match
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -618,7 +560,7 @@ export default function Onboarding() {
                   </button>
                   <button
                     onClick={handleNext}
-                    disabled={!tournamentName}
+                    disabled={!password || !confirmPassword || password !== confirmPassword}
                     className="flex-[2] bg-[#00D084] hover:bg-[#00B871] active:scale-[0.98] text-white font-semibold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none shadow-sm shadow-[#00D084]/20"
                   >
                     <span>Next</span>

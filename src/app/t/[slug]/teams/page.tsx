@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase-server';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Users } from 'lucide-react';
 
@@ -7,12 +8,29 @@ export const metadata = {
   description: 'Browse all registered teams in the tournament.',
 };
 
-export default async function TeamsPage() {
+export default async function TeamsPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
   const supabase = createServerClient();
 
+  // 1. Fetch tournament by slug
+  const { data: tournament } = await supabase
+    .from("tournaments")
+    .select("id, name, slug")
+    .eq("slug", params.slug)
+    .single();
+
+  if (!tournament) {
+    notFound();
+  }
+
+  // 2. Fetch Teams for this tournament
   const { data: teams } = await supabase
     .from('teams')
     .select('*, players(count)')
+    .eq('tournament_id', tournament.id)
     .order('name');
 
   const allTeams = teams || [];
@@ -26,7 +44,7 @@ export default async function TeamsPage() {
         Teams
       </h1>
       <p className="text-[#64748B] mb-10 text-lg font-medium">
-        All registered teams competing in the tournament
+        All registered teams competing in {tournament.name}
       </p>
 
       {allTeams.length === 0 ? (
@@ -83,7 +101,7 @@ export default async function TeamsPage() {
 
                   {/* CTA */}
                   <Link
-                    href={`/teams/${team.id}`}
+                    href={`/t/${tournament.slug}/teams/${team.id}`}
                     className="w-full bg-[#0A1628] hover:bg-[#0d1e38] text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center gap-2 group-hover:bg-[#00D084] group-hover:shadow-sm"
                   >
                     View Squad

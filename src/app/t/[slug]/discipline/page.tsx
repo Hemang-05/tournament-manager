@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 
-export default function DisciplinePage() {
+export default function DisciplinePage({
+  params,
+}: {
+  params: { slug: string };
+}) {
   const [activeTab, setActiveTab] = useState<'yellow' | 'red'>('yellow');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,9 +22,36 @@ export default function DisciplinePage() {
     async function fetchDiscipline() {
       setLoading(true);
       try {
+        // 1. Fetch tournament by slug
+        const { data: tournament } = await supabase
+          .from('tournaments')
+          .select('id')
+          .eq('slug', params.slug)
+          .single();
+
+        if (!tournament) {
+          setData([]);
+          return;
+        }
+
+        // 2. Fetch Teams for this tournament
+        const { data: teams } = await supabase
+          .from('teams')
+          .select('id')
+          .eq('tournament_id', tournament.id);
+
+        const teamIds = teams?.map(t => t.id) || [];
+
+        if (teamIds.length === 0) {
+          setData([]);
+          return;
+        }
+
+        // 3. Fetch Players from tournament teams
         let playersQuery = supabase
           .from('players')
-          .select('id, name, yellow_cards, red_cards, photo_url, team:team_id (name)');
+          .select('id, name, yellow_cards, red_cards, photo_url, team:team_id (name)')
+          .in('team_id', teamIds);
           
         if (activeTab === 'yellow') {
           playersQuery = playersQuery.gt('yellow_cards', 0).order('yellow_cards', { ascending: false });
@@ -44,27 +74,15 @@ export default function DisciplinePage() {
           setData(mapped);
         }
       } catch (err) {
-        // view fallback
-        const { data: disciplineData } = await supabase
-          .from('discipline')
-          .select('*');
-        
-        let sorted = (disciplineData || []).sort((a: any, b: any) => {
-          if (activeTab === 'yellow') {
-            return (b.yellow_cards || 0) - (a.yellow_cards || 0);
-          } else {
-            return (b.red_cards || 0) - (a.red_cards || 0);
-          }
-        });
-        sorted = sorted.filter(p => activeTab === 'yellow' ? p.yellow_cards > 0 : p.red_cards > 0);
-        setData(sorted);
+        console.error("Error fetching discipline info:", err);
+        setData([]);
       } finally {
         setLoading(false);
       }
     }
     
     fetchDiscipline();
-  }, [activeTab]);
+  }, [activeTab, params.slug]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -127,7 +145,7 @@ export default function DisciplinePage() {
                   <tr key={player.player_id} className={`hover:bg-gray-50 transition-colors group ${hasRed && activeTab === 'yellow' ? 'border-l-4 border-l-red-500' : ''}`}>
                     <td className="px-6 py-4 text-center font-medium text-gray-400">{i + 1}</td>
                     <td className="px-6 py-4">
-                      <Link href={`/players/${player.player_id}`} className="flex items-center gap-4">
+                      <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
                           {player.photo_url ? (
                             <img src={player.photo_url} className="w-full h-full object-cover" />
@@ -141,7 +159,7 @@ export default function DisciplinePage() {
                           <div className="font-bold text-gray-900 group-hover:text-[#00D084] transition-colors">{player.player_name}</div>
                           <div className="text-sm text-gray-500 font-medium">{player.team_name}</div>
                         </div>
-                      </Link>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">

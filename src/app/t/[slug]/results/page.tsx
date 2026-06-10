@@ -1,6 +1,7 @@
 import { createServerClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import { Trophy, Calendar } from "lucide-react";
 
 interface Team {
@@ -38,64 +39,60 @@ interface Match {
   match_events: MatchEvent[];
 }
 
-export default async function ResultsPage() {
+export default async function ResultsPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
   const supabase = createServerClient();
 
-  // 1. Fetch active tournament
-  const { data: activeTournaments } = await supabase
+  // 1. Fetch tournament by slug
+  const { data: tournament } = await supabase
     .from("tournaments")
-    .select("id, name")
-    .eq("status", "active")
-    .limit(1);
-
-  let tournament = activeTournaments?.[0] ?? null;
+    .select("id, name, slug")
+    .eq("slug", params.slug)
+    .single();
 
   if (!tournament) {
-    const { data: fallbackTournaments } = await supabase
-      .from("tournaments")
-      .select("id, name")
-      .limit(1);
-    tournament = fallbackTournaments?.[0] ?? null;
+    notFound();
   }
 
-  // 2. Fetch Teams, Players, Matches, and Events
+  // 2. Fetch Teams, Players, Matches, and Events for this tournament
   let teams: Team[] = [];
   let matches: Match[] = [];
   const teamsMap = new Map<string, Team>();
   const playersMap = new Map<string, Player>();
 
-  if (tournament) {
-    // Fetch Teams
-    const { data: teamsData } = await supabase
-      .from("teams")
-      .select("id, name, logo_url")
-      .eq("tournament_id", tournament.id);
-    
-    teams = teamsData ?? [];
-    teams.forEach((t) => teamsMap.set(t.id, t));
+  // Fetch Teams
+  const { data: teamsData } = await supabase
+    .from("teams")
+    .select("id, name, logo_url")
+    .eq("tournament_id", tournament.id);
+  
+  teams = teamsData ?? [];
+  teams.forEach((t) => teamsMap.set(t.id, t));
 
-    // Fetch Players for all teams in tournament
-    if (teams.length > 0) {
-      const { data: playersData } = await supabase
-        .from("players")
-        .select("id, name, team_id")
-        .in("team_id", teams.map((t) => t.id));
+  // Fetch Players for all teams in tournament
+  if (teams.length > 0) {
+    const { data: playersData } = await supabase
+      .from("players")
+      .select("id, name, team_id")
+      .in("team_id", teams.map((t) => t.id));
 
-      const players = playersData ?? [];
-      players.forEach((p) => playersMap.set(p.id, p));
-    }
-
-    // Fetch completed matches with match events joined
-    const { data: matchesData } = await supabase
-      .from("matches")
-      .select("*, match_events(*)")
-      .eq("tournament_id", tournament.id)
-      .eq("status", "completed")
-      .order("match_date", { ascending: false })
-      .order("kick_off_time", { ascending: false });
-
-    matches = (matchesData as Match[]) ?? [];
+    const players = playersData ?? [];
+    players.forEach((p) => playersMap.set(p.id, p));
   }
+
+  // Fetch completed matches with match events joined
+  const { data: matchesData } = await supabase
+    .from("matches")
+    .select("*, match_events(*)")
+    .eq("tournament_id", tournament.id)
+    .eq("status", "completed")
+    .order("match_date", { ascending: false })
+    .order("kick_off_time", { ascending: false });
+
+  matches = (matchesData as Match[]) ?? [];
 
   // Group matches by matchday, most recent first
   const groupedByMatchday: Record<string, Match[]> = {};
@@ -155,7 +152,7 @@ export default async function ResultsPage() {
         if (!player) return false;
 
         // If it's a regular goal, player must belong to the target team.
-        // If it's an own goal, player must belong to the opposing team (which scores for target team).
+        // If it's an own goal, player must belong to the opposing team.
         if (type === "goal") {
           return player.team_id === teamId;
         } else {
@@ -183,12 +180,12 @@ export default async function ResultsPage() {
           Results
         </h1>
         <p className="mt-2 text-sm text-[#64748B] font-medium">
-          Match results for {tournament ? tournament.name : "Kickoff Premier League"}
+          Match results for {tournament.name}
         </p>
       </div>
 
       {/* Results Listing */}
-      {!tournament || matches.length === 0 ? (
+      {matches.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white px-6 py-24 text-center shadow-sm">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#00D084]/10 text-[#00D084]">
             <Trophy className="h-6 w-6" />
@@ -297,7 +294,7 @@ export default async function ResultsPage() {
 
                             {/* Match Details Link */}
                             <Link
-                              href={`/results/${match.id}`}
+                              href={`/t/${tournament.slug}/results/${match.id}`}
                               className="inline-flex items-center justify-center rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] hover:bg-[#00D084] hover:text-white px-4 py-2 font-bold text-[#0F172A] transition-colors"
                             >
                               Match Details

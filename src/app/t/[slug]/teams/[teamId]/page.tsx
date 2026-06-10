@@ -1,10 +1,14 @@
 import { createServerClient } from '@/lib/supabase-server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { User, Shield } from 'lucide-react';
+import { User, Shield, ChevronLeft } from 'lucide-react';
 import { calculateStandings } from '@/lib/standings';
 
-export default async function PublicTeamPage({ params }: { params: { teamId: string } }) {
+export default async function PublicTeamPage({ 
+  params 
+}: { 
+  params: { slug: string; teamId: string } 
+}) {
   const supabase = createServerClient();
 
   const { data: team } = await supabase
@@ -69,6 +73,17 @@ export default async function PublicTeamPage({ params }: { params: { teamId: str
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Back button */}
+      <div className="mb-6">
+        <Link
+          href={`/t/${params.slug}/teams`}
+          className="inline-flex items-center gap-1 text-sm font-semibold text-[#00D084] hover:text-[#00B871] transition-colors"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Back to Teams
+        </Link>
+      </div>
+
       {/* Team Header */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-12">
         <div className="h-32 bg-[#0A1628] w-full"></div>
@@ -113,7 +128,7 @@ export default async function PublicTeamPage({ params }: { params: { teamId: str
         {players?.map(player => {
           const stats = getPlayerStats(player.id);
           return (
-            <Link key={player.id} href={`/players/${player.id}`} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
+            <div key={player.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
               <div className="p-6 flex flex-col items-center text-center relative">
                 {player.role?.toLowerCase() === 'captain' && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-yellow-400 text-yellow-900 rounded-full font-bold text-xs flex items-center justify-center shadow-sm" title="Captain">
@@ -156,7 +171,7 @@ export default async function PublicTeamPage({ params }: { params: { teamId: str
                   </div>
                 </div>
               </div>
-            </Link>
+            </div>
           );
         })}
       </div>

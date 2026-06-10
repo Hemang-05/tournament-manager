@@ -58,7 +58,7 @@ export default async function TournamentSlugLayout({
                 <Link href="/host" className="font-semibold text-[#00D084] hover:underline">
                   Host Tournament
                 </Link>
-                <span>Powered by TournamentMgr</span>
+                <span>Powered by Kickoff</span>
               </div>
             </div>
           </div>

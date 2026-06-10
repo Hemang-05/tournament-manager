@@ -53,7 +53,7 @@ interface Match {
 export default async function MatchDetailPage({
   params,
 }: {
-  params: { matchId: string };
+  params: { slug: string; matchId: string };
 }) {
   const supabase = createServerClient();
 
@@ -132,7 +132,7 @@ export default async function MatchDetailPage({
     const t = type?.toLowerCase();
     if (t === "goal") {
       return {
-        icon: "Goal",
+        icon: "⚽",
         label: "Goal",
         bgColor: "bg-green-50 text-green-700 border-green-200",
         pillColor: "bg-green-500",
@@ -140,7 +140,7 @@ export default async function MatchDetailPage({
     }
     if (t === "own_goal") {
       return {
-        icon: "Own Goal",
+        icon: "⚽",
         label: "Own Goal",
         bgColor: "bg-orange-50 text-orange-700 border-orange-200",
         pillColor: "bg-orange-500",
@@ -148,7 +148,7 @@ export default async function MatchDetailPage({
     }
     if (t === "yellow_card") {
       return {
-        icon: "Yellow Card",
+        icon: "🟨",
         label: "Yellow Card",
         bgColor: "bg-amber-50 text-amber-700 border-amber-200",
         pillColor: "bg-amber-500",
@@ -156,14 +156,14 @@ export default async function MatchDetailPage({
     }
     if (t === "red_card") {
       return {
-        icon: "Red Card",
+        icon: "🟥",
         label: "Red Card",
         bgColor: "bg-red-50 text-red-700 border-red-200",
         pillColor: "bg-red-500",
       };
     }
     return {
-      icon: "Event",
+      icon: "📢",
       label: "Event",
       bgColor: "bg-slate-50 text-slate-700 border-slate-200",
       pillColor: "bg-slate-500",
@@ -175,7 +175,7 @@ export default async function MatchDetailPage({
       {/* Back button */}
       <div className="mb-6">
         <Link
-          href="/results"
+          href={`/t/${params.slug}/results`}
           className="inline-flex items-center gap-1 text-sm font-semibold text-[#00D084] hover:text-[#00B871] transition-colors"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -187,7 +187,6 @@ export default async function MatchDetailPage({
         
         {/* 1. SCOREBOARD HERO */}
         <div className="overflow-hidden rounded-2xl bg-[#0A1628] text-white shadow-xl relative">
-          {/* Pitch background lines overlay */}
           <div className="absolute inset-0 opacity-5 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:30px_30px]" />
           
           <div className="relative p-6 sm:p-10">
@@ -212,7 +211,7 @@ export default async function MatchDetailPage({
                 </h2>
               </div>
 
-              {/* Large Monospace Score */}
+              {/* Large Score */}
               <div className="flex flex-col items-center justify-center flex-shrink-0 px-4">
                 <div className="font-mono text-4xl sm:text-6xl font-black text-[#00D084] tracking-tight bg-white/5 border border-white/15 px-6 py-3 rounded-2xl shadow-inner">
                   {match.home_score} - {match.away_score}
@@ -296,8 +295,6 @@ export default async function MatchDetailPage({
                     {/* Timeline dot */}
                     <span className={`absolute -left-[31px] flex h-4 w-4 items-center justify-center rounded-full border-2 border-white ${meta.pillColor} ring-4 ring-slate-50 transition-transform group-hover:scale-110`} />
 
-
-
                     {/* Event Detail Card */}
                     <div className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm transition-all ${meta.bgColor}`}>
                       <span className="text-lg">{meta.icon}</span>
@@ -310,6 +307,9 @@ export default async function MatchDetailPage({
                           {playerTeam?.name || "Team"} ({meta.label})
                         </span>
                       </div>
+                      <span className="text-xs font-mono font-bold text-slate-400 bg-white/40 border border-slate-200/30 px-1.5 py-0.5 rounded">
+                        {event.minute}'
+                      </span>
                     </div>
                   </div>
                 );

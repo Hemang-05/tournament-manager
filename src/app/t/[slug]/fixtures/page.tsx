@@ -1,6 +1,7 @@
 import { createServerClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import { Calendar, MapPin, Clock } from "lucide-react";
 
 interface Team {
@@ -24,56 +25,50 @@ interface Match {
 }
 
 export default async function FixturesPage({
+  params,
   searchParams,
 }: {
+  params: { slug: string };
   searchParams: { filter?: string };
 }) {
   const supabase = createServerClient();
   const activeFilter = searchParams.filter || "all";
 
-  // 1. Fetch active tournament
-  const { data: activeTournaments } = await supabase
+  // 1. Fetch tournament by slug
+  const { data: tournament } = await supabase
     .from("tournaments")
-    .select("id, name")
-    .eq("status", "active")
-    .limit(1);
-
-  let tournament = activeTournaments?.[0] ?? null;
+    .select("id, name, slug")
+    .eq("slug", params.slug)
+    .single();
 
   if (!tournament) {
-    const { data: fallbackTournaments } = await supabase
-      .from("tournaments")
-      .select("id, name")
-      .limit(1);
-    tournament = fallbackTournaments?.[0] ?? null;
+    notFound();
   }
 
-  // 2. Fetch Teams and Matches if tournament exists
+  // 2. Fetch Teams and Matches for this tournament
   let teams: Team[] = [];
   let matches: Match[] = [];
   const teamsMap = new Map<string, Team>();
 
-  if (tournament) {
-    // Fetch Teams
-    const { data: teamsData } = await supabase
-      .from("teams")
-      .select("id, name, logo_url")
-      .eq("tournament_id", tournament.id);
-    
-    teams = teamsData ?? [];
-    teams.forEach((t) => teamsMap.set(t.id, t));
+  // Fetch Teams
+  const { data: teamsData } = await supabase
+    .from("teams")
+    .select("id, name, logo_url")
+    .eq("tournament_id", tournament.id);
+  
+  teams = teamsData ?? [];
+  teams.forEach((t) => teamsMap.set(t.id, t));
 
-    // Fetch matches with status scheduled or live
-    const { data: matchesData } = await supabase
-      .from("matches")
-      .select("*")
-      .eq("tournament_id", tournament.id)
-      .in("status", ["scheduled", "live", "postponed"])
-      .order("match_date", { ascending: true })
-      .order("kick_off_time", { ascending: true });
+  // Fetch matches with status scheduled or live
+  const { data: matchesData } = await supabase
+    .from("matches")
+    .select("*")
+    .eq("tournament_id", tournament.id)
+    .in("status", ["scheduled", "live", "postponed"])
+    .order("match_date", { ascending: true })
+    .order("kick_off_time", { ascending: true });
 
-    matches = matchesData ?? [];
-  }
+  matches = matchesData ?? [];
 
   // 3. Apply Filters in-memory
   let filteredMatches = matches;
@@ -93,7 +88,6 @@ export default async function FixturesPage({
   }
 
   // Group matches by matchday
-  // Key format: "Matchday X" or "Quarter-finals" or "General"
   const groupedByMatchday: Record<string, Match[]> = {};
   filteredMatches.forEach((match) => {
     let groupKey = "General Fixtures";
@@ -118,7 +112,7 @@ export default async function FixturesPage({
     return a.localeCompare(b);
   });
 
-  // Helper to format date header (e.g., "Saturday, 13 June 2026")
+  // Helper to format date header
   const formatDateHeader = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-GB", {
       weekday: "long",
@@ -128,7 +122,7 @@ export default async function FixturesPage({
     });
   };
 
-  // Helper to format time (e.g., "18:30")
+  // Helper to format time
   const formatTime = (timeStr?: string | null) => {
     if (!timeStr) return "TBD";
     const parts = timeStr.split(":");
@@ -157,21 +151,21 @@ export default async function FixturesPage({
             Fixtures
           </h1>
           <p className="mt-2 text-sm text-[#64748B] font-medium">
-            Upcoming matches scheduled for {tournament ? tournament.name : "Kickoff Premier League"}
+            Upcoming matches scheduled for {tournament.name}
           </p>
         </div>
 
         {/* Filter Buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          <FilterLink label="All" filter="all" active={activeFilter === "all"} />
-          <FilterLink label="This Week" filter="this-week" active={activeFilter === "this-week"} />
-          <FilterLink label="League" filter="league" active={activeFilter === "league"} />
-          <FilterLink label="Knockout" filter="knockout" active={activeFilter === "knockout"} />
+          <FilterLink label="All" filter="all" active={activeFilter === "all"} slug={params.slug} />
+          <FilterLink label="This Week" filter="this-week" active={activeFilter === "this-week"} slug={params.slug} />
+          <FilterLink label="League" filter="league" active={activeFilter === "league"} slug={params.slug} />
+          <FilterLink label="Knockout" filter="knockout" active={activeFilter === "knockout"} slug={params.slug} />
         </div>
       </div>
 
       {/* Fixtures Listing */}
-      {!tournament || filteredMatches.length === 0 ? (
+      {filteredMatches.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white px-6 py-24 text-center shadow-sm">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#00D084]/10 text-[#00D084]">
             <Calendar className="h-6 w-6" />
@@ -300,14 +294,16 @@ function FilterLink({
   label,
   filter,
   active,
+  slug,
 }: {
   label: string;
   filter: string;
   active: boolean;
+  slug: string;
 }) {
   return (
     <Link
-      href={`/fixtures?filter=${filter}`}
+      href={`/t/${slug}/fixtures?filter=${filter}`}
       className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
         active
           ? "bg-[#00D084] text-[#0A1628] shadow-md shadow-[#00D084]/20"

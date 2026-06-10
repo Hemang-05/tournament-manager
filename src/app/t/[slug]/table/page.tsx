@@ -1,50 +1,48 @@
 import { createServerClient } from "@/lib/supabase-server";
+import { notFound } from "next/navigation";
 import { Info } from "lucide-react";
 import { calculateStandings, StandingRow } from "@/lib/standings";
 
-export default async function LeagueTablePage() {
+export default async function LeagueTablePage({
+  params,
+}: {
+  params: { slug: string };
+}) {
   const supabase = createServerClient();
 
-  // 1. Fetch active tournament
-  const { data: activeTournaments } = await supabase
+  // 1. Fetch tournament by slug
+  const { data: tournament } = await supabase
     .from("tournaments")
     .select("id, name, format, points_win, points_draw, points_loss")
-    .eq("status", "active")
-    .limit(1);
-
-  let tournament = activeTournaments?.[0] ?? null;
+    .eq("slug", params.slug)
+    .single();
 
   if (!tournament) {
-    const { data: fallbackTournaments } = await supabase
-      .from("tournaments")
-      .select("id, name, format, points_win, points_draw, points_loss")
-      .limit(1);
-    tournament = fallbackTournaments?.[0] ?? null;
+    notFound();
   }
 
   // 2. Fetch teams and matches to calculate standings dynamically
   let standings: StandingRow[] = [];
   let teams: any[] = [];
-  if (tournament) {
-    const { data: fetchedTeams } = await supabase
-      .from("teams")
-      .select("*")
-      .eq("tournament_id", tournament.id);
 
-    const { data: fetchedMatches } = await supabase
-      .from("matches")
-      .select("*")
-      .eq("tournament_id", tournament.id);
+  const { data: fetchedTeams } = await supabase
+    .from("teams")
+    .select("*")
+    .eq("tournament_id", tournament.id);
 
-    teams = fetchedTeams || [];
-    standings = calculateStandings(
-      teams,
-      fetchedMatches || [],
-      tournament.points_win ?? 2,
-      tournament.points_draw ?? 1,
-      tournament.points_loss ?? 0
-    );
-  }
+  const { data: fetchedMatches } = await supabase
+    .from("matches")
+    .select("*")
+    .eq("tournament_id", tournament.id);
+
+  teams = fetchedTeams || [];
+  standings = calculateStandings(
+    teams,
+    fetchedMatches || [],
+    tournament.points_win ?? 2,
+    tournament.points_draw ?? 1,
+    tournament.points_loss ?? 0
+  );
 
   // Helper to generate unique team dot colors
   const getTeamColor = (name: string) => {
@@ -75,7 +73,7 @@ export default async function LeagueTablePage() {
     timeZoneName: "short",
   });
 
-  const isGroupFormat = tournament?.format === "league_knockout";
+  const isGroupFormat = tournament.format === "league_knockout";
 
   // Group standings if needed
   const groupedStandings: Record<string, StandingRow[]> = {};
@@ -228,12 +226,12 @@ export default async function LeagueTablePage() {
           League Standings
         </h1>
         <p className="mt-2 text-sm text-[#64748B] font-medium">
-          {tournament ? tournament.name : "Kickoff Premier League"}
+          {tournament.name}
         </p>
       </div>
 
       {/* Standings Table Card */}
-      {!tournament || teams.length === 0 ? (
+      {teams.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white px-6 py-24 text-center shadow-sm">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#00D084]/10 text-[#00D084]">
             <Info className="h-6 w-6" />
@@ -261,7 +259,7 @@ export default async function LeagueTablePage() {
       )}
 
       {/* Last Updated Timestamp */}
-      {tournament && teams.length > 0 && (
+      {teams.length > 0 && (
         <div className="mt-4 text-right">
           <p className="text-xs font-semibold text-[#64748B] italic">
             Last updated: {currentTimestamp}

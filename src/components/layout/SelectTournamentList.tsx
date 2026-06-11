@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { Calendar, ArrowRight } from 'lucide-react';
 
+import { getDisplayStatus } from '@/lib/tournament';
+
 interface Tournament {
   id: string;
   name: string;
@@ -23,9 +25,9 @@ export default function SelectTournamentList({ tournaments }: { tournaments: Tou
   };
 
   const statusColors: Record<string, string> = {
-    active: 'bg-green-100 text-green-800 border-green-200',
-    draft: 'bg-amber-100 text-amber-800 border-amber-200',
-    completed: 'bg-gray-100 text-gray-800 border-gray-200',
+    Live: 'bg-green-100 text-green-800 border-green-200',
+    Upcoming: 'bg-amber-100 text-amber-800 border-amber-200',
+    Completed: 'bg-gray-100 text-gray-800 border-gray-200',
   };
 
   const sportEmojis: Record<string, string> = {
@@ -49,7 +51,7 @@ export default function SelectTournamentList({ tournaments }: { tournaments: Tou
         const formatLabel = formatLabels[t.format?.toLowerCase() || 'league'] || t.format || 'League';
         const start = t.start_date ? new Date(t.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'TBD';
         const end = t.end_date ? new Date(t.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'TBD';
-        const statusVal = t.status === 'active' ? 'Live' : t.status === 'completed' ? 'Completed' : 'Draft';
+        const displayStatus = getDisplayStatus(t.status, t.start_date);
 
         return (
           <button
@@ -62,8 +64,8 @@ export default function SelectTournamentList({ tournaments }: { tournaments: Tou
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg flex items-center justify-center">
                   {t.sport || 'other'}
                 </span>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusColors[t.status] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
-                  {statusVal}
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusColors[displayStatus] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
+                  {displayStatus}
                 </span>
               </div>
 

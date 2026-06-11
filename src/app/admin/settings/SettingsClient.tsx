@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Settings, Save, CheckCircle, Loader2 } from 'lucide-react';
+import DeleteTournamentButton from '@/components/layout/DeleteTournamentButton';
 
 export default function SettingsClient({ tournament }: { tournament: any }) {
   const router = useRouter();
@@ -19,6 +20,10 @@ export default function SettingsClient({ tournament }: { tournament: any }) {
   const [maxTeams, setMaxTeams] = useState(tournament.max_teams || 8);
   const [playersPerTeam, setPlayersPerTeam] = useState(tournament.players_per_team || 8);
   const [rules, setRules] = useState(tournament.rules_content || '');
+  
+  const [dailyStartTime, setDailyStartTime] = useState(tournament.daily_start_time || '09:00');
+  const [dailyEndTime, setDailyEndTime] = useState(tournament.daily_end_time || '18:00');
+  const [matchDuration, setMatchDuration] = useState(tournament.match_duration || 20);
   
   // Points config
   const [pointsWin, setPointsWin] = useState(tournament.points_win !== undefined && tournament.points_win !== null ? tournament.points_win : 2);
@@ -58,6 +63,9 @@ export default function SettingsClient({ tournament }: { tournament: any }) {
           points_win: Number(pointsWin),
           points_draw: Number(pointsDraw),
           points_loss: Number(pointsLoss),
+          daily_start_time: dailyStartTime,
+          daily_end_time: dailyEndTime,
+          match_duration: Number(matchDuration),
         }),
       });
 
@@ -133,6 +141,18 @@ export default function SettingsClient({ tournament }: { tournament: any }) {
               <label className="block text-sm font-medium text-gray-700 mb-1">Max Teams *</label>
               <input required type="number" min="2" max="32" value={maxTeams} onChange={e => setMaxTeams(Number(e.target.value))} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#00D084]/40" />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Daily Match Start Time *</label>
+              <input required type="time" value={dailyStartTime} onChange={e => setDailyStartTime(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#00D084]/40" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Daily Match End Time *</label>
+              <input required type="time" value={dailyEndTime} onChange={e => setDailyEndTime(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#00D084]/40" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Default Match Duration (Minutes) *</label>
+              <input required type="number" min="5" max="180" value={matchDuration} onChange={e => setMatchDuration(Number(e.target.value))} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#00D084]/40" />
+            </div>
           </div>
 
           <div>
@@ -200,6 +220,19 @@ export default function SettingsClient({ tournament }: { tournament: any }) {
           </button>
         </div>
       </form>
+
+      {/* Section 5: Danger Zone */}
+      <div className="bg-red-50/40 border border-red-100 rounded-2xl p-6 sm:p-8 space-y-4 shadow-xs mt-8">
+        <div>
+          <h2 className="text-lg font-bold text-red-700 border-b border-red-100 pb-2">Danger Zone</h2>
+          <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+            Deleting the tournament will permanently remove all teams, fixtures, results, pages, and organisers linked to this tournament. This action is irreversible.
+          </p>
+        </div>
+        <div className="pt-2 flex justify-start">
+          <DeleteTournamentButton tournamentId={tournament.id} tournamentName={tournament.name} />
+        </div>
+      </div>
     </div>
   );
 }

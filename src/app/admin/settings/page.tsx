@@ -1,5 +1,5 @@
 import { createServerClient } from '@/lib/supabase-server';
-import { getSelectedTournamentId } from '@/lib/tournament';
+import { getSelectedTournamentId } from '@/lib/tournament-server';
 import SettingsClient from './SettingsClient';
 
 export default async function SettingsPage() {

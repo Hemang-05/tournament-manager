@@ -27,6 +27,9 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
 
   // Setup Wizard State
   const [selectedFormat, setSelectedFormat] = useState<'league' | 'knockout' | 'league_knockout'>('league');
+  const [startTime, setStartTime] = useState(tournament.daily_start_time || '09:00');
+  const [endTime, setEndTime] = useState(tournament.daily_end_time || '18:00');
+  const [matchDuration, setMatchDuration] = useState(tournament.match_duration || 20);
   const [numGroups, setNumGroups] = useState<2 | 4>(2);
   const [advancementCount, setAdvancementCount] = useState<1 | 2>(2);
   const [teamGroupAssignments, setTeamGroupAssignments] = useState<Record<string, string>>({});
@@ -100,7 +103,10 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
           tournamentId: tournament.id,
           format: selectedFormat,
           groups: selectedFormat === 'league_knockout' ? teamGroupAssignments : null,
-          advancementCount
+          advancementCount,
+          startTime,
+          endTime,
+          matchDuration
         })
       });
       const data = await res.json();
@@ -444,13 +450,52 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
               </button>
             </div>
           </div>
+          {/* Step 2: Scheduling Parameters */}
+          <div className="space-y-4 pt-6 border-t border-gray-100 text-left">
+            <label className="block text-sm font-bold text-gray-800">2. Configure Match Timing & Schedule</label>
+            <p className="text-xs text-gray-500 -mt-2">Determine daily starting/ending hours and duration for each match. A 5-minute buffer is automatically included between matches.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">Daily Start Time *</label>
+                <input
+                  required
+                  type="time"
+                  value={startTime}
+                  onChange={e => setStartTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#00D084]/40 bg-white text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">Daily End Time *</label>
+                <input
+                  required
+                  type="time"
+                  value={endTime}
+                  onChange={e => setEndTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#00D084]/40 bg-white text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">Match Duration (Minutes) *</label>
+                <input
+                  required
+                  type="number"
+                  min="5"
+                  max="180"
+                  value={matchDuration}
+                  onChange={e => setMatchDuration(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#00D084]/40 bg-white text-sm font-bold"
+                />
+              </div>
+            </div>
+          </div>
 
-          {/* Step 2: Group Config & Assignment (If league_knockout is chosen) */}
+          {/* Step 3: Group Config & Assignment (If league_knockout is chosen) */}
           {selectedFormat === 'league_knockout' && (
             <div className="space-y-6 pt-6 border-t border-gray-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <label className="block text-sm font-bold text-gray-800">2. Configure Pools / Groups</label>
+                <div className="space-y-1 text-left">
+                  <label className="block text-sm font-bold text-gray-800">3. Configure Pools / Groups</label>
                   <p className="text-xs text-gray-500">Drag teams into groups, or click the randomize button to assign them automatically.</p>
                 </div>
                 <div className="flex items-center gap-4">

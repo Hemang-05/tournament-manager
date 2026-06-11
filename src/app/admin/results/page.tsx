@@ -1,5 +1,5 @@
 import { createServerClient } from '@/lib/supabase-server';
-import { getSelectedTournamentId } from '@/lib/tournament';
+import { getSelectedTournamentId } from '@/lib/tournament-server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ClipboardList, Radio, CheckCircle2, ChevronRight, Calendar, Trophy } from 'lucide-react';

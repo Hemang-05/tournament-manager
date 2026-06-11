@@ -39,13 +39,14 @@ export default function DeleteTournamentButton({ tournamentId, tournamentName, i
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to delete tournament');
 
-      // Clear the selected tournament cookie on client
+      // Clear cookies on client
       document.cookie = 'selected_tournament_id=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      document.cookie = 'admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       
       alert('Tournament successfully deleted.');
       
-      // Redirect to admin landing (which will prompt to select or create a tournament)
-      router.push('/admin');
+      // Redirect to onboarding/signup page
+      router.push('/admin/onboarding');
       router.refresh();
     } catch (err: any) {
       alert(`Error: ${err.message}`);
@@ -63,7 +64,7 @@ export default function DeleteTournamentButton({ tournamentId, tournamentName, i
       className={
         isIconOnly
           ? "p-2 text-gray-400 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all disabled:opacity-50 flex items-center justify-center"
-          : "w-full flex items-center gap-2 py-2 px-3 rounded-lg text-gray-500 hover:text-red-400 hover:bg-white/5 transition-all text-xs font-semibold disabled:opacity-50"
+          : "inline-flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-all text-xs font-bold disabled:opacity-50 shadow-sm"
       }
     >
       {deleting ? (

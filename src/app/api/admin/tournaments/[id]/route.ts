@@ -44,7 +44,8 @@ export async function PATCH(
       'start_date', 'end_date', 'venue_name', 'match_days',
       'max_matches_per_day', 'max_teams', 'rules_content',
       'is_public', 'status', 'players_per_team', 'points_win',
-      'points_draw', 'points_loss',
+      'points_draw', 'points_loss', 'daily_start_time',
+      'daily_end_time', 'match_duration',
     ];
 
     const updates: Record<string, unknown> = {};

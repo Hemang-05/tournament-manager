@@ -1,9 +1,4 @@
-import { cookies } from 'next/headers';
-
-export function getSelectedTournamentId(cookieStore?: ReturnType<typeof cookies>) {
-  const store = cookieStore || cookies();
-  return store.get('selected_tournament_id')?.value || null;
-}
+// Client-safe tournament utilities and mappings
 
 // Mappings for Sport
 const SPORT_MAP_TO_UI: Record<string, string> = {
@@ -62,5 +57,25 @@ export function mapTournamentDbToUi<T extends { sport?: string | null; format?: 
     sport: t.sport ? dbToUiSport(t.sport) : t.sport,
     format: t.format ? dbToUiFormat(t.format) : t.format,
   };
+}
+
+export function getDisplayStatus(status: string | null | undefined, startDate?: string | null): 'Live' | 'Upcoming' | 'Completed' {
+  const currentStatus = (status || 'draft').toLowerCase();
+  if (currentStatus === 'completed') return 'Completed';
+  if (currentStatus === 'active') return 'Live';
+  
+  if (startDate) {
+    // IST is UTC + 5:30
+    const now = new Date();
+    const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istDateStr = new Date(utcTime + istOffset).toISOString().split('T')[0];
+    
+    if (istDateStr >= startDate) {
+      return 'Live';
+    }
+  }
+  
+  return 'Upcoming';
 }
 

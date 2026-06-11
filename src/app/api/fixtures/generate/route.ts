@@ -33,13 +33,16 @@ function generateRoundRobin(teams: any[], stageName: string) {
   return fixtures;
 }
 
-// Scheduling algorithm to assign dates and kick-off times
+// Scheduling algorithm to assign dates and kick-off times sequentially
 function assignDatesAndTimes(
   fixtures: any[],
   startDateStr: string | null,
   endDateStr: string | null,
   matchDays: string[] | null,
-  maxMatchesPerDay: number
+  startTime: string,
+  endTime: string,
+  matchDuration: number,
+  bufferTime: number = 5
 ) {
   let currentDate = new Date(startDateStr || new Date().toISOString().split('T')[0]);
   const allowedDays = (matchDays || ['Sat', 'Sun']).map(d => d.toLowerCase());
@@ -53,15 +56,6 @@ function assignDatesAndTimes(
     for (let i = 0; i < 7; i++) allowedDayNums.push(i);
   }
 
-  const getKickoffTime = (index: number) => {
-    const startHour = 9;
-    const interval = 2; // 2 hours per match
-    const hour = startHour + index * interval;
-    return `${String(hour).padStart(2, '0')}:00`;
-  };
-
-  let matchIndexOnDay = 0;
-  
   const advanceToNextMatchDay = (date: Date) => {
     const next = new Date(date);
     do {
@@ -74,15 +68,28 @@ function assignDatesAndTimes(
     currentDate = advanceToNextMatchDay(currentDate);
   }
 
+  // Parse start/end hours and minutes
+  const [startH, startM] = startTime.split(':').map(Number);
+  const [endH, endM] = endTime.split(':').map(Number);
+  const dailyStartMinutes = startH * 60 + startM;
+  const dailyEndMinutes = endH * 60 + endM;
+
+  let currentMinutes = dailyStartMinutes;
+
   return fixtures.map(fixture => {
-    if (matchIndexOnDay >= maxMatchesPerDay) {
+    // If the match does not fit in the daily window, roll over to the next match day
+    if (currentMinutes + matchDuration > dailyEndMinutes) {
       currentDate = advanceToNextMatchDay(currentDate);
-      matchIndexOnDay = 0;
+      currentMinutes = dailyStartMinutes;
     }
 
     const dateStr = currentDate.toISOString().split('T')[0];
-    const timeStr = getKickoffTime(matchIndexOnDay);
-    matchIndexOnDay++;
+    const hh = String(Math.floor(currentMinutes / 60)).padStart(2, '0');
+    const mm = String(currentMinutes % 60).padStart(2, '0');
+    const timeStr = `${hh}:${mm}`;
+
+    // Increment minutes by match duration and 5 minutes buffer
+    currentMinutes += matchDuration + bufferTime;
 
     return {
       ...fixture,
@@ -95,7 +102,15 @@ function assignDatesAndTimes(
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { tournamentId, format, groups, advancementCount = 2 } = body;
+    const { 
+      tournamentId, 
+      format, 
+      groups, 
+      advancementCount = 2,
+      startTime = '09:00',
+      endTime = '18:00',
+      matchDuration = 20
+    } = body;
     
     if (!tournamentId) return NextResponse.json({ error: 'Missing tournamentId' }, { status: 400 });
     if (!format) return NextResponse.json({ error: 'Missing format' }, { status: 400 });
@@ -141,7 +156,9 @@ export async function POST(request: Request) {
         tournament.start_date,
         tournament.end_date,
         tournament.match_days,
-        tournament.max_matches_per_day || 4
+        startTime,
+        endTime,
+        Number(matchDuration)
       );
     } else if (format === 'knockout') {
       // Pure Knockout bracket
@@ -214,7 +231,9 @@ export async function POST(request: Request) {
         tournament.start_date,
         tournament.end_date,
         tournament.match_days,
-        tournament.max_matches_per_day || 4
+        startTime,
+        endTime,
+        Number(matchDuration)
       );
     } else if (format === 'league_knockout') {
       // Group Stage then Knockout
@@ -249,7 +268,9 @@ export async function POST(request: Request) {
         tournament.start_date,
         tournament.end_date,
         tournament.match_days,
-        tournament.max_matches_per_day || 4
+        startTime,
+        endTime,
+        Number(matchDuration)
       );
 
       // Find the last date of group stage to schedule knockouts after
@@ -323,7 +344,9 @@ export async function POST(request: Request) {
         nextDay.toISOString().split('T')[0],
         tournament.end_date,
         tournament.match_days,
-        tournament.max_matches_per_day || 4
+        startTime,
+        endTime,
+        Number(matchDuration)
       );
 
       generatedMatches = [...scheduledGroupMatches, ...scheduledKnockoutMatches];

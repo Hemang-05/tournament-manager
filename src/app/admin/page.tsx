@@ -1,10 +1,12 @@
 import { createServerClient } from '@/lib/supabase-server';
 import { getSessionFromCookies } from '@/lib/auth';
-import { getSelectedTournamentId } from '@/lib/tournament';
+import { getDisplayStatus } from '@/lib/tournament';
+import { getSelectedTournamentId } from '@/lib/tournament-server';
 import Link from 'next/link';
 import { Users, CalendarDays, ClipboardList, Wand2 } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import SelectTournamentList from '@/components/layout/SelectTournamentList';
+import TournamentStatusController from '@/components/layout/TournamentStatusController';
 
 export default async function AdminDashboard() {
   const supabase = createServerClient();
@@ -121,21 +123,27 @@ export default async function AdminDashboard() {
     .order('match_date', { ascending: true })
     .limit(3);
 
+  const displayStatus = getDisplayStatus(tournament.status, tournament.start_date);
+
   return (
     <div className="p-8 space-y-8">
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">{greeting}, {displayName}</h1>
           <div className="flex items-center gap-3">
             <h2 className="text-xl text-gray-600">{tournament.name}</h2>
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              tournament.status === 'Active' ? 'bg-green-100 text-green-800' :
-              tournament.status === 'Completed' ? 'bg-gray-100 text-gray-800' :
+              displayStatus === 'Live' ? 'bg-green-100 text-green-800' :
+              displayStatus === 'Completed' ? 'bg-gray-100 text-gray-800' :
               'bg-yellow-100 text-yellow-800'
             }`}>
-              {tournament.status}
+              {displayStatus}
             </span>
           </div>
+        </div>
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl p-2.5 shadow-sm">
+          <span className="text-xs font-bold text-gray-500">Tournament Status:</span>
+          <TournamentStatusController tournamentId={tournament.id} initialStatus={tournament.status} />
         </div>
       </div>
 

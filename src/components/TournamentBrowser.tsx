@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Trophy, Search, ArrowRight, Calendar, Users, MapPin } from 'lucide-react';
+import { getDisplayStatus } from '@/lib/tournament';
 
 /* ───────── Types ───────── */
 interface Tournament {
@@ -38,10 +39,8 @@ const SPORT_EMOJI: Record<string, string> = {
 const SPORT_TABS = ['All', 'Football', 'Cricket', 'Basketball', 'Pickleball', 'Other'] as const;
 const STATUS_TABS = ['All', 'Live', 'Upcoming', 'Completed'] as const;
 
-function mapStatus(dbStatus: string): 'Live' | 'Upcoming' | 'Completed' {
-  if (dbStatus === 'active') return 'Live';
-  if (dbStatus === 'draft') return 'Upcoming';
-  return 'Completed';
+function mapStatus(dbStatus: string, startDate?: string | null): 'Live' | 'Upcoming' | 'Completed' {
+  return getDisplayStatus(dbStatus, startDate);
 }
 
 function formatDateRange(start: string | null, end: string | null): string {
@@ -89,7 +88,7 @@ export default function TournamentBrowser({ tournaments }: Props) {
 
       // Status filter
       if (statusFilter !== 'All') {
-        const mapped = mapStatus(t.status);
+        const mapped = mapStatus(t.status, t.start_date);
         if (mapped !== statusFilter) return false;
       }
 
@@ -296,7 +295,7 @@ export default function TournamentBrowser({ tournaments }: Props) {
    Tournament Card
    ═══════════════════════════════════════════════ */
 function TournamentCard({ tournament: t }: { tournament: Tournament }) {
-  const status = mapStatus(t.status);
+  const status = mapStatus(t.status, t.start_date);
   const sportLabel = getSportLabel(t);
   const emoji = SPORT_EMOJI[t.sport || 'Other'] || '🎯';
 

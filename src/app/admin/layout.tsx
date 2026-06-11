@@ -4,8 +4,7 @@ import Link from "next/link";
 import TournamentSwitcher from "@/components/layout/TournamentSwitcher";
 import AdminNav from "@/components/layout/AdminNav";
 import LogoutButton from "@/components/layout/LogoutButton";
-import DeleteTournamentButton from "@/components/layout/DeleteTournamentButton";
-import { getSelectedTournamentId } from "@/lib/tournament";
+import { getSelectedTournamentId } from "@/lib/tournament-server";
 import { createServerClient } from "@/lib/supabase-server";
 import { LayoutDashboard, Users, CalendarDays, ClipboardList, Trophy, GitFork, FileText, Settings, Plus } from "lucide-react";
 
@@ -73,7 +72,6 @@ export default async function AdminLayout({
           <span className="text-sm font-bold text-white">Tournament<span className="text-[#00D084]">Mgr</span></span>
         </Link>
         <div className="flex items-center gap-2">
-          <DeleteTournamentButton tournamentId={tournamentId} tournamentName={tournamentName} isIconOnly={true} />
           <LogoutButton isIconOnly={true} />
         </div>
       </header>
@@ -87,16 +85,9 @@ export default async function AdminLayout({
             </div>
             <span className="text-lg font-bold text-white">Tournament<span className="text-[#00D084]">Mgr</span></span>
           </Link>
-          <Link 
-            href="/admin/onboarding" 
-            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-[#00D084]/50 text-[#00D084] hover:border-[#00D084] hover:bg-[#00D084]/10 transition-colors text-xs font-bold"
-          >
-            <Plus size={14} /> Add Tournament
-          </Link>
         </div>
         <AdminNav items={navItems} />
         <div className="p-4 mt-auto space-y-1">
-          <DeleteTournamentButton tournamentId={tournamentId} tournamentName={tournamentName} />
           <LogoutButton />
         </div>
       </aside>

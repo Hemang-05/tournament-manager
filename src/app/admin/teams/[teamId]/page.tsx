@@ -1,5 +1,5 @@
 import { createServerClient } from '@/lib/supabase-server';
-import { getSelectedTournamentId } from '@/lib/tournament';
+import { getSelectedTournamentId } from '@/lib/tournament-server';
 import PlayersClient from './PlayersClient';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';

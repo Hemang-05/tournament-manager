@@ -10,12 +10,14 @@ export default function TeamsClient({
   initialTeams, 
   tournamentId,
   playersPerTeam,
-  tournamentSlug
+  tournamentSlug,
+  maxTeams
 }: { 
   initialTeams: any[], 
   tournamentId: string,
   playersPerTeam: number,
-  tournamentSlug: string
+  tournamentSlug: string,
+  maxTeams: number
 }) {
   const [teams, setTeams] = useState(initialTeams);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,6 +38,10 @@ export default function TeamsClient({
   );
 
   const openModal = (team: any = null) => {
+    if (!team && teams.length >= maxTeams) {
+      alert(`Cannot add more teams. The maximum team limit of ${maxTeams} has been reached.`);
+      return;
+    }
     setEditingTeam(team);
     setName(team?.name || '');
     setManagerName(team?.manager_name || '');
@@ -87,6 +93,11 @@ export default function TeamsClient({
         setTeams(teams.map(t => t.id === data.id ? { ...t, ...data } : t));
       }
     } else {
+      if (teams.length >= maxTeams) {
+        alert(`Cannot add team. The maximum limit of ${maxTeams} teams has been reached.`);
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase
         .from('teams')
         .insert({ tournament_id: tournamentId, name, manager_name: managerName, logo_url })

@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import { Calendar, MapPin, FileText, HelpCircle } from 'lucide-react';
-import { mapTournamentDbToUi } from '@/lib/tournament';
+import { mapTournamentDbToUi, getDisplayStatus } from '@/lib/tournament';
 import TournamentViewClient from './TournamentViewClient';
 
 export default async function TournamentOverviewPage({ params }: { params: { slug: string } }) {
@@ -94,14 +94,14 @@ export default async function TournamentOverviewPage({ params }: { params: { slu
               </span>
               <span
                 className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                  tournament.status === 'active'
+                  getDisplayStatus(tournament.status, tournament.start_date) === 'Live'
                     ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                    : tournament.status === 'completed'
+                    : getDisplayStatus(tournament.status, tournament.start_date) === 'Completed'
                     ? 'bg-slate-500/20 text-slate-300 border border-slate-500/30'
                     : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                 }`}
               >
-                {tournament.status === 'active' ? 'LIVE' : tournament.status.toUpperCase()}
+                {getDisplayStatus(tournament.status, tournament.start_date) === 'Live' ? 'LIVE' : getDisplayStatus(tournament.status, tournament.start_date).toUpperCase()}
               </span>
             </div>
 

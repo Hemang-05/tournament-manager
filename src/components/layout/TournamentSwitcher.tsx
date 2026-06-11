@@ -1,7 +1,7 @@
 import { createServerClient } from '@/lib/supabase-server';
 import { getSessionFromCookies } from '@/lib/auth';
 import TournamentSwitcherClient from './TournamentSwitcherClient';
-import { getSelectedTournamentId } from '@/lib/tournament';
+import { getSelectedTournamentId } from '@/lib/tournament-server';
 
 export default async function TournamentSwitcher() {
   const session = await getSessionFromCookies();

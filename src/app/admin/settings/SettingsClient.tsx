@@ -151,7 +151,18 @@ export default function SettingsClient({ tournament }: { tournament: any }) {
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Default Match Duration (Minutes) *</label>
-              <input required type="number" min="5" max="180" value={matchDuration} onChange={e => setMatchDuration(Number(e.target.value))} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#00D084]/40" />
+              <input
+                required
+                type="text"
+                pattern="[0-9]*"
+                inputMode="numeric"
+                value={matchDuration || ''}
+                onChange={e => {
+                  const val = e.target.value.replace(/[^0-9]/g, '');
+                  setMatchDuration(val ? Number(val) : 0);
+                }}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#00D084]/40"
+              />
             </div>
           </div>
 

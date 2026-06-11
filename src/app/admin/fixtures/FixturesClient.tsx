@@ -311,8 +311,20 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
     return Array.from(dates).sort();
   };
 
-  // Calendar Rows: Timeslots
-  const timeSlots = ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00'];
+  // Calendar Rows: Dynamic Timeslots fetched from matches
+  const getCalendarTimeSlots = () => {
+    const slots = new Set<string>();
+    matches.forEach(m => {
+      if (m.kick_off_time) {
+        slots.add(m.kick_off_time.slice(0, 5));
+      }
+    });
+    if (slots.size === 0) {
+      return ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00'];
+    }
+    return Array.from(slots).sort();
+  };
+  const timeSlots = getCalendarTimeSlots();
 
   const groupMatchesByMatchday = (matchList: any[]) => {
     const groups: Record<string, any[]> = {};
@@ -479,11 +491,14 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                 <label className="block text-xs font-bold text-gray-600 mb-1">Match Duration (Minutes) *</label>
                 <input
                   required
-                  type="number"
-                  min="5"
-                  max="180"
-                  value={matchDuration}
-                  onChange={e => setMatchDuration(Number(e.target.value))}
+                  type="text"
+                  pattern="[0-9]*"
+                  inputMode="numeric"
+                  value={matchDuration || ''}
+                  onChange={e => {
+                    const val = e.target.value.replace(/[^0-9]/g, '');
+                    setMatchDuration(val ? Number(val) : 0);
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#00D084]/40 bg-white text-sm font-bold"
                 />
               </div>

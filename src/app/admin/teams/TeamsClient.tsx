@@ -138,11 +138,23 @@ export default function TeamsClient({
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this team?')) return;
+    if (!window.confirm("Are you sure you want to delete this team? This will also remove the team's players and matches.")) return;
     
-    await supabase.from('teams').delete().eq('id', id);
-    setTeams(teams.filter(t => t.id !== id));
-    router.refresh();
+    try {
+      const res = await fetch(`/api/admin/teams/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to delete team.');
+      }
+      
+      setTeams(teams.filter(t => t.id !== id));
+      router.refresh();
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    }
   };
 
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/t/${tournamentSlug}/register` : '';

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { calculateStandings, StandingRow } from '@/lib/standings';
 import { Calendar, Trophy, Users, Shield, Clock, ChevronRight, User } from 'lucide-react';
 import Link from 'next/link';
+import MatchDetailModal from '@/components/public/MatchDetailModal';
 
 interface Props {
   tournament: any;
@@ -15,6 +16,19 @@ interface Props {
 export default function TournamentViewClient({ tournament, teams, matches, players }: Props) {
   const [activeTab, setActiveTab] = useState<'standings' | 'fixtures' | 'results' | 'teams'>('standings');
   const [selectedTeam, setSelectedTeam] = useState<any | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<any | null>(null);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedTeam || selectedMatch) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedTeam, selectedMatch]);
 
   // 1. Calculate Standings
   const standings = calculateStandings(
@@ -25,7 +39,7 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
     tournament.points_loss ?? 0
   );
 
-  const isGroupFormat = tournament.format === 'Group + Knockout' || tournament.format === 'league_knockout';
+  const isGroupFormat = tournament.format === 'League + Knockout' || tournament.format === 'Group + Knockout' || tournament.format === 'league_knockout';
 
   // Group standings if needed
   const groupedStandings: Record<string, StandingRow[]> = {};
@@ -145,8 +159,11 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
                     return (
                       <div
                         key={match.id}
+                        onClick={() => {
+                          if (isLive) setSelectedMatch(match);
+                        }}
                         className={`bg-white border rounded-xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 transition-all ${
-                          isLive ? 'border-green-300 bg-green-50/10' : 'border-slate-200'
+                          isLive ? 'border-green-300 bg-green-50/10 cursor-pointer hover:border-green-400 hover:shadow-md' : 'border-slate-200'
                         }`}
                       >
                         {/* Kickoff */}
@@ -220,8 +237,9 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
                     return (
                       <div
                         key={match.id}
-                        className={`bg-white border rounded-xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 transition-all ${
-                          isLive ? 'border-green-300 bg-green-50/10' : 'border-slate-200'
+                        onClick={() => setSelectedMatch(match)}
+                        className={`bg-white border rounded-xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 transition-all cursor-pointer hover:border-[#00D084]/40 hover:shadow-md ${
+                          isLive ? 'border-green-300 bg-green-50/10 hover:border-green-400' : 'border-slate-200'
                         }`}
                       >
                         {/* Kickoff */}
@@ -417,6 +435,14 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
           </div>
         </div>
       )}
+
+      {/* Match Detail Modal */}
+      <MatchDetailModal
+        match={selectedMatch}
+        teams={teams}
+        players={players}
+        onClose={() => setSelectedMatch(null)}
+      />
     </div>
   );
 }

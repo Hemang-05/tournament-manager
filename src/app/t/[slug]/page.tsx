@@ -39,7 +39,8 @@ export default async function TournamentOverviewPage({ params }: { params: { slu
     .select(`
       *,
       home_team:home_team_id (id, name, logo_url),
-      away_team:away_team_id (id, name, logo_url)
+      away_team:away_team_id (id, name, logo_url),
+      match_events (*)
     `)
     .eq('tournament_id', tournament.id)
     .order('match_date', { ascending: true })

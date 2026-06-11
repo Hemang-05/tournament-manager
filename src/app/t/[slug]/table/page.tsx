@@ -73,7 +73,7 @@ export default async function LeagueTablePage({
     timeZoneName: "short",
   });
 
-  const isGroupFormat = tournament.format === "league_knockout";
+  const isGroupFormat = tournament.format === "league_knockout" || tournament.format === "League + Knockout";
 
   // Group standings if needed
   const groupedStandings: Record<string, StandingRow[]> = {};

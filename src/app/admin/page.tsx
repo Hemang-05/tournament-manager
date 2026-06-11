@@ -48,7 +48,7 @@ export default async function AdminDashboard() {
           </div>
         ) : (
           <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm text-center py-12">
-            <p className="text-gray-600 mb-6 font-medium">You haven't created a tournament yet. Let's get started!</p>
+            <p className="text-gray-600 mb-6 font-medium">You haven&apos;t created a tournament yet. Let&apos;s get started!</p>
             <Link href="/admin/onboarding" className="inline-flex items-center justify-center bg-[#00D084] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#00B871] transition-colors shadow-lg shadow-[#00D084]/20">
               Create a Tournament
             </Link>

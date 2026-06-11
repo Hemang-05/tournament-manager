@@ -308,7 +308,7 @@ export default async function MatchDetailPage({
                         </span>
                       </div>
                       <span className="text-xs font-mono font-bold text-slate-400 bg-white/40 border border-slate-200/30 px-1.5 py-0.5 rounded">
-                        {event.minute}'
+                        {event.minute}&apos;
                       </span>
                     </div>
                   </div>
@@ -330,7 +330,7 @@ export default async function MatchDetailPage({
             </h3>
             <div className="prose max-w-none text-[#0F172A] text-sm leading-relaxed italic bg-[#F8FAFC] p-5 rounded-xl border border-slate-100 font-serif">
               <p className="whitespace-pre-line">
-                "{match.ai_report}"
+                &ldquo;{match.ai_report}&rdquo;
               </p>
             </div>
           </div>

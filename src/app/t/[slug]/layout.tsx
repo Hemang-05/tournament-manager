@@ -5,6 +5,19 @@ import TournamentNavbar from '@/components/layout/TournamentNavbar';
 import { mapTournamentDbToUi } from '@/lib/tournament';
 import Link from 'next/link';
 
+const parseOrganiserInfo = (joinedName: string) => {
+  if (!joinedName) return [];
+  return joinedName.split(' | ').map(part => {
+    const contactIndex = part.indexOf(' (Contact: ');
+    if (contactIndex !== -1) {
+      const name = part.substring(0, contactIndex);
+      const contact = part.substring(contactIndex + ' (Contact: '.length, part.length - 1);
+      return { name, contact };
+    }
+    return { name: part, contact: '' };
+  });
+};
+
 export default async function TournamentSlugLayout({
   children,
   params,
@@ -21,7 +34,7 @@ export default async function TournamentSlugLayout({
   // Fetch tournament by slug
   const { data: rawTournament, error: tError } = await supabase
     .from('tournaments')
-    .select('id, name, slug, sport, format, status')
+    .select('id, name, slug, sport, format, status, organiser_id, organisers ( name )')
     .eq('slug', params.slug)
     .single();
 
@@ -30,6 +43,11 @@ export default async function TournamentSlugLayout({
   }
 
   const tournament = mapTournamentDbToUi(rawTournament)!;
+  const rawOrg = (rawTournament as any).organisers;
+  const orgData = rawOrg
+    ? (Array.isArray(rawOrg) ? rawOrg[0] : rawOrg)
+    : null;
+  const organiserName = orgData?.name || '';
 
   // Fetch CMS pages for this tournament
   const { data: cmsPages } = await supabase
@@ -54,11 +72,29 @@ export default async function TournamentSlugLayout({
                 <span>•</span>
                 <span>© {new Date().getFullYear()} All rights reserved.</span>
               </div>
-              <div className="text-sm text-[#64748B] flex items-center gap-4">
+              <div className="text-sm text-[#64748B] flex flex-wrap items-center justify-center sm:justify-end gap-x-4 gap-y-2">
+                {organiserName && (
+                  <span className="text-xs">
+                    Contact:{' '}
+                    {parseOrganiserInfo(organiserName).map((org, i, arr) => (
+                      <span key={i}>
+                        <span className="font-semibold text-[#475569]">{org.name}</span>
+                        {org.contact && (
+                          <>
+                            {' '}(<a href={`tel:${org.contact}`} className="text-[#00D084] hover:underline font-mono">{org.contact}</a>)
+                          </>
+                        )}
+                        {i < arr.length - 1 ? ' | ' : ''}
+                      </span>
+                    ))}
+                  </span>
+                )}
+                {organiserName && <span className="hidden sm:inline text-gray-200">|</span>}
                 <Link href="/host" className="font-semibold text-[#00D084] hover:underline">
                   Host Tournament
                 </Link>
-                <span>Powered by Kickoff</span>
+                <span className="hidden sm:inline text-gray-200">|</span>
+                <span>Developed by Hemang Mehta</span>
               </div>
             </div>
           </div>

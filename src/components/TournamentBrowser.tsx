@@ -28,6 +28,17 @@ interface Props {
 }
 
 /* ───────── Helpers ───────── */
+const formatOrganiserNamesOnly = (joinedName: string | null | undefined) => {
+  if (!joinedName) return '';
+  return joinedName.split(' | ').map(part => {
+    const contactIndex = part.indexOf(' (Contact: ');
+    if (contactIndex !== -1) {
+      return part.substring(0, contactIndex);
+    }
+    return part;
+  }).join(' & ');
+};
+
 const SPORT_EMOJI: Record<string, string> = {
   Football: '⚽',
   Cricket: '🏏',
@@ -344,7 +355,8 @@ function TournamentCard({ tournament: t }: { tournament: Tournament }) {
       <div className="p-5 flex flex-col flex-1">
         {/* Header row: sport label + status */}
         <div className="flex items-start justify-between mb-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border border-[#E8ECF1] px-2.5 py-1.5 rounded-lg flex items-center justify-center">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border border-[#E8ECF1] px-2.5 py-1.5 rounded-lg flex items-center justify-center gap-1.5">
+            <span className="text-sm">{emoji}</span>
             {sportLabel}
           </span>
           <span
@@ -370,7 +382,7 @@ function TournamentCard({ tournament: t }: { tournament: Tournament }) {
           {t.organisers?.name && (
             <p className="text-sm text-[#64748B] flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5 text-[#94A3B8] flex-shrink-0" />
-              {t.organisers.name}
+              {formatOrganiserNamesOnly(t.organisers.name)}
             </p>
           )}
           {t.venue_name && (

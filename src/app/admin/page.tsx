@@ -17,7 +17,10 @@ export default async function AdminDashboard() {
   
   let displayName = (session.name as string) || 'Organiser';
   if (displayName.includes(' (Contact:')) {
-    displayName = displayName.split(' (Contact:')[0];
+    displayName = displayName
+      .split(' | ')
+      .map(part => part.split(' (Contact:')[0])
+      .join(' & ');
   }
 
   // Fetch tournaments created by this organiser

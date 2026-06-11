@@ -89,8 +89,23 @@ export default function Onboarding() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [organiserName, setOrganiserName] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
+  const [organisersList, setOrganisersList] = useState<{ name: string; contact: string }[]>([
+    { name: '', contact: '' }
+  ]);
+
+  const handleAddOrganiser = () => {
+    setOrganisersList(prev => [...prev, { name: '', contact: '' }]);
+  };
+
+  const handleRemoveOrganiser = (index: number) => {
+    setOrganisersList(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateOrganiser = (index: number, field: 'name' | 'contact', value: string) => {
+    setOrganisersList(prev =>
+      prev.map((org, i) => (i === index ? { ...org, [field]: value } : org))
+    );
+  };
 
   /* ── Tournament ── */
   const [tournamentName, setTournamentName] = useState('');
@@ -144,8 +159,10 @@ export default function Onboarding() {
       }
     }
     if (step === 2) {
-      if (!organiserName.trim()) { setError("Organiser's Name is required"); return; }
-      if (!contactNumber.trim()) { setError('Contact Number is required'); return; }
+      if (organisersList.some(org => !org.name.trim() || !org.contact.trim())) {
+        setError('Please fill out the name and contact number for all organisers');
+        return;
+      }
       if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
       if (password !== confirmPassword) { setError('Passwords do not match'); return; }
     }
@@ -160,12 +177,16 @@ export default function Onboarding() {
     const generatedSlug = slug || slugify(tournamentName);
 
     try {
-      // 1. Create organiser account with username = slug, name = Organiser Name (Contact: Contact Number)
+      const joinedName = organisersList
+        .map(org => `${org.name.trim()} (Contact: ${org.contact.trim()})`)
+        .join(' | ');
+
+      // 1. Create organiser account with username = slug, name = joined name
       const signupRes = await fetch('/api/admin/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: `${organiserName.trim()} (Contact: ${contactNumber.trim()})`,
+          name: joinedName,
           username: generatedSlug,
           password
         }),
@@ -492,38 +513,68 @@ export default function Onboarding() {
                 </div>
 
                 <div className="space-y-4">
-                  {/* Admin Details */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="onb-orgname" className="block text-sm font-semibold text-[#374151] mb-1.5">
-                        Organiser's Name
-                      </label>
-                      <input
-                        id="onb-orgname"
-                        name="organiserName"
-                        type="text"
-                        value={organiserName}
-                        onChange={e => setOrganiserName(e.target.value)}
-                        placeholder="John Doe"
-                        className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="onb-orgcontact" className="block text-sm font-semibold text-[#374151] mb-1.5">
-                        Contact Number
-                      </label>
-                      <input
-                        id="onb-orgcontact"
-                        name="contactNumber"
-                        type="text"
-                        value={contactNumber}
-                        onChange={e => setContactNumber(e.target.value)}
-                        placeholder="e.g. +91 98765 43210"
-                        className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all"
-                        required
-                      />
-                    </div>
+                  {/* Admin Details Header */}
+                  <div className="flex items-center justify-between border-b border-gray-150 pb-2 mb-3">
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      Organisers Information
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={handleAddOrganiser}
+                      className="text-xs text-[#00D084] font-bold hover:underline flex items-center gap-1"
+                    >
+                      + Add Organiser
+                    </button>
+                  </div>
+
+                  {/* Organisers Input List */}
+                  <div className="space-y-4">
+                    {organisersList.map((org, idx) => (
+                      <div key={idx} className="p-4 bg-gray-50/50 border border-gray-100 rounded-xl space-y-3 relative group">
+                        {organisersList.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveOrganiser(idx)}
+                            className="absolute right-3 top-3 text-xs text-red-500 hover:text-red-700 font-bold transition-colors"
+                          >
+                            Remove
+                          </button>
+                        )}
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                          Organiser #{idx + 1}
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-[#374151] mb-1.5">
+                              Name
+                            </label>
+                            <input
+                              type="text"
+                              name={`org-name-${idx}`}
+                              value={org.name}
+                              onChange={e => handleUpdateOrganiser(idx, 'name', e.target.value)}
+                              placeholder="John Doe"
+                              className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-[#374151] mb-1.5">
+                              Contact Number
+                            </label>
+                            <input
+                              type="text"
+                              name={`org-contact-${idx}`}
+                              value={org.contact}
+                              onChange={e => handleUpdateOrganiser(idx, 'contact', e.target.value)}
+                              placeholder="e.g. +91 98765 43210"
+                              className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
                   {/* Password fields */}
@@ -602,7 +653,12 @@ export default function Onboarding() {
                   </button>
                   <button
                     onClick={handleNext}
-                    disabled={!organiserName || !contactNumber || !password || !confirmPassword || password !== confirmPassword}
+                    disabled={
+                      organisersList.some(org => !org.name.trim() || !org.contact.trim()) ||
+                      !password ||
+                      !confirmPassword ||
+                      password !== confirmPassword
+                    }
                     className="flex-[2] bg-[#00D084] hover:bg-[#00B871] active:scale-[0.98] text-white font-semibold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none shadow-sm shadow-[#00D084]/20"
                   >
                     <span>Next</span>

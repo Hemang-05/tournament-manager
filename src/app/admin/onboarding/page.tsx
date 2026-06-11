@@ -89,6 +89,8 @@ export default function Onboarding() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [organiserName, setOrganiserName] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
 
   /* ── Tournament ── */
   const [tournamentName, setTournamentName] = useState('');
@@ -142,6 +144,8 @@ export default function Onboarding() {
       }
     }
     if (step === 2) {
+      if (!organiserName.trim()) { setError("Organiser's Name is required"); return; }
+      if (!contactNumber.trim()) { setError('Contact Number is required'); return; }
       if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
       if (password !== confirmPassword) { setError('Passwords do not match'); return; }
     }
@@ -156,11 +160,15 @@ export default function Onboarding() {
     const generatedSlug = slug || slugify(tournamentName);
 
     try {
-      // 1. Create organiser account with username = slug, name = Admin
+      // 1. Create organiser account with username = slug, name = Organiser Name (Contact: Contact Number)
       const signupRes = await fetch('/api/admin/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'Admin', username: generatedSlug, password }),
+        body: JSON.stringify({
+          name: `${organiserName.trim()} (Contact: ${contactNumber.trim()})`,
+          username: generatedSlug,
+          password
+        }),
       });
 
       const signupData = await signupRes.json();
@@ -308,7 +316,7 @@ export default function Onboarding() {
                   {/* Slug */}
                   <div>
                     <label htmlFor="onb-slug" className="block text-sm font-semibold text-[#374151] mb-1.5">
-                      URL Slug
+                      Tournament Slug
                     </label>
                     <input
                       id="onb-slug"
@@ -476,14 +484,46 @@ export default function Onboarding() {
               <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
                 <div>
                   <h2 className="text-xl font-bold text-[#0F172A]" style={{ fontFamily: 'Georgia, serif' }}>
-                    Access Password
+                    Access & Admin Details
                   </h2>
                   <p className="text-sm text-[#64748B] mt-1">
-                    Set a password to manage this tournament. Keep it secure.
+                    Provide your admin details and set a password to manage this tournament.
                   </p>
                 </div>
 
                 <div className="space-y-4">
+                  {/* Admin Details */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="onb-orgname" className="block text-sm font-semibold text-[#374151] mb-1.5">
+                        Organiser's Name
+                      </label>
+                      <input
+                        id="onb-orgname"
+                        type="text"
+                        value={organiserName}
+                        onChange={e => setOrganiserName(e.target.value)}
+                        placeholder="John Doe"
+                        className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="onb-orgcontact" className="block text-sm font-semibold text-[#374151] mb-1.5">
+                        Contact Number
+                      </label>
+                      <input
+                        id="onb-orgcontact"
+                        type="text"
+                        value={contactNumber}
+                        onChange={e => setContactNumber(e.target.value)}
+                        placeholder="e.g. +91 98765 43210"
+                        className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
                   {/* Password fields */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -560,7 +600,7 @@ export default function Onboarding() {
                   </button>
                   <button
                     onClick={handleNext}
-                    disabled={!password || !confirmPassword || password !== confirmPassword}
+                    disabled={!organiserName || !contactNumber || !password || !confirmPassword || password !== confirmPassword}
                     className="flex-[2] bg-[#00D084] hover:bg-[#00B871] active:scale-[0.98] text-white font-semibold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none shadow-sm shadow-[#00D084]/20"
                   >
                     <span>Next</span>

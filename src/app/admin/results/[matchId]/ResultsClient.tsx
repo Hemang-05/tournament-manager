@@ -27,6 +27,7 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
   const [eventPlayerId, setEventPlayerId] = useState('');
   const [eventType, setEventType] = useState('Goal');
   const [addingEvent, setAddingEvent] = useState(false);
+  const [activeMobileTab, setActiveMobileTab] = useState<'home' | 'away'>('home');
 
   const router = useRouter();
   const supabase = createBrowserClient(
@@ -374,10 +375,36 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
           <h3 className="font-extrabold text-[#0A1628]" style={{ fontFamily: 'Georgia, serif' }}>Live Player Statistics Logger</h3>
           <p className="text-xs text-gray-500 mt-1">Tap + to add a goal or select cards for any player on either team.</p>
         </div>
+
+        {/* Mobile Tab Selectors */}
+        <div className="flex md:hidden border-b border-gray-200 bg-gray-50/50">
+          <button
+            type="button"
+            onClick={() => setActiveMobileTab('home')}
+            className={`flex-1 py-3 text-center text-xs font-bold border-b-2 uppercase tracking-wider transition-all ${
+              activeMobileTab === 'home'
+                ? 'border-[#00D084] text-[#00D084] bg-white'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
+            }`}
+          >
+            {match.home_team.name}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveMobileTab('away')}
+            className={`flex-1 py-3 text-center text-xs font-bold border-b-2 uppercase tracking-wider transition-all ${
+              activeMobileTab === 'away'
+                ? 'border-[#00D084] text-[#00D084] bg-white'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
+            }`}
+          >
+            {match.away_team.name}
+          </button>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
           {/* Home Team Players */}
-          <div className="p-4 md:p-6 space-y-4">
+          <div className={`p-4 md:p-6 space-y-4 ${activeMobileTab === 'home' ? 'block' : 'hidden md:block'}`}>
             <div className="flex items-center justify-between border-b border-gray-100 pb-2">
               <h4 className="font-bold text-gray-900 flex items-center gap-2 text-sm uppercase tracking-wider">
                 <span className="w-3 h-3 rounded-full bg-blue-500"></span>
@@ -476,7 +503,7 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
           </div>
 
           {/* Away Team Players */}
-          <div className="p-4 md:p-6 space-y-4">
+          <div className={`p-4 md:p-6 space-y-4 ${activeMobileTab === 'away' ? 'block' : 'hidden md:block'}`}>
             <div className="flex items-center justify-between border-b border-gray-100 pb-2">
               <h4 className="font-bold text-gray-900 flex items-center gap-2 text-sm uppercase tracking-wider">
                 <span className="w-3 h-3 rounded-full bg-purple-500"></span>

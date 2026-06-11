@@ -7,9 +7,10 @@ import { Trash2, Loader2 } from 'lucide-react';
 interface DeleteTournamentButtonProps {
   tournamentId: string | null;
   tournamentName: string;
+  isIconOnly?: boolean;
 }
 
-export default function DeleteTournamentButton({ tournamentId, tournamentName }: DeleteTournamentButtonProps) {
+export default function DeleteTournamentButton({ tournamentId, tournamentName, isIconOnly = false }: DeleteTournamentButtonProps) {
   const [deleting, setDeleting] = useState(false);
   const router = useRouter();
 
@@ -58,14 +59,19 @@ export default function DeleteTournamentButton({ tournamentId, tournamentName }:
       type="button"
       onClick={handleDelete}
       disabled={deleting}
-      className="w-full flex items-center gap-2 py-2 px-3 rounded-lg text-gray-500 hover:text-red-400 hover:bg-white/5 transition-all text-xs font-semibold disabled:opacity-50"
+      title="Delete Tournament"
+      className={
+        isIconOnly
+          ? "p-2 text-gray-400 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all disabled:opacity-50 flex items-center justify-center"
+          : "w-full flex items-center gap-2 py-2 px-3 rounded-lg text-gray-500 hover:text-red-400 hover:bg-white/5 transition-all text-xs font-semibold disabled:opacity-50"
+      }
     >
       {deleting ? (
-        <Loader2 size={14} className="animate-spin text-gray-500" />
+        <Loader2 size={isIconOnly ? 20 : 14} className="animate-spin text-gray-500" />
       ) : (
-        <Trash2 size={14} />
+        <Trash2 size={isIconOnly ? 20 : 14} />
       )}
-      <span>{deleting ? 'Deleting...' : 'Delete Tournament'}</span>
+      {!isIconOnly && <span>{deleting ? 'Deleting...' : 'Delete Tournament'}</span>}
     </button>
   );
 }

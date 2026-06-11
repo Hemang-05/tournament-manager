@@ -14,7 +14,11 @@ export default async function AdminDashboard() {
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const name = (session.name as string) || 'Organiser';
+  
+  let displayName = (session.name as string) || 'Organiser';
+  if (displayName.includes(' (Contact:')) {
+    displayName = displayName.split(' (Contact:')[0];
+  }
 
   // Fetch tournaments created by this organiser
   const { data: tournaments } = await supabase
@@ -30,7 +34,7 @@ export default async function AdminDashboard() {
     return (
       <div className="p-8 max-w-4xl">
         <h1 className="text-3xl font-black text-gray-900 mb-6" style={{ fontFamily: 'Georgia, serif' }}>
-          {greeting}, {name}
+          {greeting}, {displayName}
         </h1>
         {hasTournaments ? (
           <div>
@@ -63,6 +67,42 @@ export default async function AdminDashboard() {
   const { count: completedMatches } = await supabase.from('matches').select('*', { count: 'exact', head: true }).eq('tournament_id', tournamentId).eq('status', 'completed');
   const { count: pendingResults } = await supabase.from('matches').select('*', { count: 'exact', head: true }).eq('tournament_id', tournamentId).in('status', ['scheduled', 'live']);
 
+  // Fetch duplicate players (same name in different teams)
+  const { data: teams } = await supabase
+    .from('teams')
+    .select('id, name')
+    .eq('tournament_id', tournamentId);
+
+  const teamIds = teams?.map(t => t.id) || [];
+  let duplicatePlayers: { name: string; teams: string[] }[] = [];
+
+  if (teamIds.length > 0) {
+    const { data: players } = await supabase
+      .from('players')
+      .select('name, team_id')
+      .in('team_id', teamIds);
+
+    if (players) {
+      const nameToTeams: Record<string, string[]> = {};
+      players.forEach(p => {
+        const pName = p.name.trim();
+        if (!pName) return;
+        const teamObj = teams?.find(t => t.id === p.team_id);
+        const teamName = teamObj ? teamObj.name : 'Unknown Team';
+        if (!nameToTeams[pName]) {
+          nameToTeams[pName] = [];
+        }
+        if (!nameToTeams[pName].includes(teamName)) {
+          nameToTeams[pName].push(teamName);
+        }
+      });
+
+      duplicatePlayers = Object.entries(nameToTeams)
+        .filter(([_, tNames]) => tNames.length > 1)
+        .map(([pName, tNames]) => ({ name: pName, teams: tNames }));
+    }
+  }
+
   // Upcoming matches
   const { data: upcomingMatches } = await supabase
     .from('matches')
@@ -82,7 +122,7 @@ export default async function AdminDashboard() {
     <div className="p-8 space-y-8">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">{greeting}, {name}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">{greeting}, {displayName}</h1>
           <div className="flex items-center gap-3">
             <h2 className="text-xl text-gray-600">{tournament.name}</h2>
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -94,10 +134,29 @@ export default async function AdminDashboard() {
             </span>
           </div>
         </div>
-        <button className="text-sm font-medium text-gray-600 hover:text-gray-900 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm">
-          Edit Status
-        </button>
       </div>
+
+      {/* Important Note: Duplicate Players Alert */}
+      {duplicatePlayers.length > 0 && (
+        <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl shadow-sm space-y-2">
+          <div className="flex items-center gap-2">
+            <svg className="h-5 w-5 text-amber-600 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <h3 className="text-sm font-bold text-amber-800 uppercase tracking-wide">Note: Matching Player Names Identified</h3>
+          </div>
+          <p className="text-xs text-amber-700 leading-relaxed">
+            The same player name is registered in more than one team. They might be different players, but please double check to confirm eligibility:
+          </p>
+          <ul className="text-xs text-amber-800 space-y-1.5 list-disc list-inside bg-white/50 p-3 rounded-lg border border-amber-200/50">
+            {duplicatePlayers.map((player, idx) => (
+              <li key={idx} className="font-medium">
+                Matching name <span className="font-bold text-amber-950">&quot;{player.name}&quot;</span> found in: <span className="italic font-semibold">{player.teams.join(' and ')}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Teams" value={`${teamsCount || 0} / ${tournament.max_teams}`} icon={Users} />

@@ -64,6 +64,20 @@ export default async function AdminLayout({
 
   return (
     <div className="flex h-screen bg-gray-50 flex-col md:flex-row overflow-hidden">
+      {/* Mobile Top Header */}
+      <header className="md:hidden bg-[#0A1628] text-white px-4 py-3 flex items-center justify-between border-b border-gray-800 flex-shrink-0">
+        <Link href="/admin" className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#00D084]">
+            <Trophy size={14} className="text-white" />
+          </div>
+          <span className="text-sm font-bold text-white">Tournament<span className="text-[#00D084]">Mgr</span></span>
+        </Link>
+        <div className="flex items-center gap-2">
+          <DeleteTournamentButton tournamentId={tournamentId} tournamentName={tournamentName} isIconOnly={true} />
+          <LogoutButton isIconOnly={true} />
+        </div>
+      </header>
+
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-[240px] bg-[#0A1628] text-white flex-shrink-0">
         <div className="p-6">
@@ -73,10 +87,9 @@ export default async function AdminLayout({
             </div>
             <span className="text-lg font-bold text-white">Tournament<span className="text-[#00D084]">Mgr</span></span>
           </Link>
-          <TournamentSwitcher />
           <Link 
             href="/admin/onboarding" 
-            className="mt-4 w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-[#00D084]/50 text-[#00D084] hover:border-[#00D084] hover:bg-[#00D084]/10 transition-colors text-xs font-bold"
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-[#00D084]/50 text-[#00D084] hover:border-[#00D084] hover:bg-[#00D084]/10 transition-colors text-xs font-bold"
           >
             <Plus size={14} /> Add Tournament
           </Link>

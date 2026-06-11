@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 
-export default function LogoutButton() {
+export default function LogoutButton({ isIconOnly = false }: { isIconOnly?: boolean }) {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -15,10 +15,15 @@ export default function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors w-full p-2"
+      title="Logout"
+      className={
+        isIconOnly
+          ? "p-2 text-gray-400 hover:text-white transition-colors rounded-lg flex items-center justify-center"
+          : "flex items-center gap-2 text-gray-400 hover:text-white transition-colors w-full p-2"
+      }
     >
       <LogOut size={20} />
-      <span className="font-medium">Logout</span>
+      {!isIconOnly && <span className="font-medium">Logout</span>}
     </button>
   );
 }

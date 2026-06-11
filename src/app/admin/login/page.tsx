@@ -5,6 +5,17 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Eye, EyeOff, Trophy } from 'lucide-react';
 
+/* ───────── Slug utility ───────── */
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+}
+
 export default function AdminLogin() {
   const [slug, setSlug] = useState('');
   const [password, setPassword] = useState('');
@@ -19,10 +30,11 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
+      const resolvedUsername = slugify(slug);
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: slug, password }),
+        body: JSON.stringify({ username: resolvedUsername, password }),
       });
 
       const data = await res.json();
@@ -79,14 +91,14 @@ export default function AdminLogin() {
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label htmlFor="login-username" className="block text-sm font-semibold text-[#374151] mb-1.5">
-                Tournament Slug
+                Tournament Name / Slug
               </label>
               <input
                 id="login-username"
                 type="text"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
-                placeholder="e.g. premier-league-2026"
+                placeholder="e.g. Sunday League 2026"
                 autoComplete="username"
                 className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#00D084]/40 focus:border-[#00D084] transition-all font-mono"
                 required

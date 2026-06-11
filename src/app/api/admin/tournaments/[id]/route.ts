@@ -178,6 +178,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Failed to delete tournament' }, { status: 500 });
     }
 
+    // 7. Delete the associated organiser
+    await supabase.from('organisers').delete().eq('id', organiserId);
+
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('Tournament delete error:', error);

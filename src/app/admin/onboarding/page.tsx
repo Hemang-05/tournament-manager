@@ -316,7 +316,7 @@ export default function Onboarding() {
                   {/* Slug */}
                   <div>
                     <label htmlFor="onb-slug" className="block text-sm font-semibold text-[#374151] mb-1.5">
-                      Tournament Slug
+                      Username
                     </label>
                     <input
                       id="onb-slug"
@@ -500,6 +500,7 @@ export default function Onboarding() {
                       </label>
                       <input
                         id="onb-orgname"
+                        name="organiserName"
                         type="text"
                         value={organiserName}
                         onChange={e => setOrganiserName(e.target.value)}
@@ -514,6 +515,7 @@ export default function Onboarding() {
                       </label>
                       <input
                         id="onb-orgcontact"
+                        name="contactNumber"
                         type="text"
                         value={contactNumber}
                         onChange={e => setContactNumber(e.target.value)}

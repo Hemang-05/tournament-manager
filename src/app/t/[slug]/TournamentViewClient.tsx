@@ -369,7 +369,7 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
               <div className="flex items-center gap-3">
                 <TeamLogo team={selectedTeam} initials={getTeamInitials(selectedTeam.name)} />
                 <div>
-                  <h3 className="font-bold text-lg leading-tight">{selectedTeam.name} Roster</h3>
+                  <h3 className="font-bold text-lg leading-tight">{selectedTeam.name}</h3>
                   {selectedTeam.manager_name ? (
                     <p className="text-xs text-slate-300 font-medium">Manager: {selectedTeam.manager_name}</p>
                   ) : (

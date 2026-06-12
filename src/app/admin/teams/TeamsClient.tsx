@@ -59,6 +59,17 @@ export default function TeamsClient({
     e.preventDefault();
     setLoading(true);
 
+    const duplicateCheckName = name.trim().toLowerCase();
+    const isDuplicate = teams.some(
+      (t) => (editingTeam ? t.id !== editingTeam.id : true) && t.name.trim().toLowerCase() === duplicateCheckName
+    );
+
+    if (isDuplicate) {
+      alert(`Warning: A team named "${name}" is already registered in this tournament.`);
+      setLoading(false);
+      return;
+    }
+
     let logo_url = editingTeam?.logo_url;
 
     if (logoFile) {

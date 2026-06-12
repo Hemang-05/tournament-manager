@@ -52,6 +52,21 @@ export default function RegisterClient({ tournament, organiserName, initialTeams
     setError('');
 
     try {
+      // Check if team name already exists (case-insensitive)
+      const { data: existingTeams } = await supabase
+        .from('teams')
+        .select('name')
+        .eq('tournament_id', tournament.id);
+
+      const isDuplicate = existingTeams?.some(
+        (t) => t.name.trim().toLowerCase() === teamName.trim().toLowerCase()
+      );
+
+      if (isDuplicate) {
+        alert(`Warning: A team named "${teamName}" is already registered in this tournament.`);
+        throw new Error(`A team named "${teamName}" is already registered.`);
+      }
+
       // Fetch fresh team count to prevent race conditions
       const { count } = await supabase
         .from('teams')

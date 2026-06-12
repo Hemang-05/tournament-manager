@@ -735,14 +735,22 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                       {/* Matchday info / Score */}
                       <div className="text-center">
                         {match.status?.toLowerCase() === 'completed' ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <span className="font-extrabold text-base text-slate-900 bg-slate-100 px-2 py-1 rounded">
-                              {match.home_score ?? 0}
-                            </span>
-                            <span className="text-gray-400 font-bold text-xs">-</span>
-                            <span className="font-extrabold text-base text-slate-900 bg-slate-100 px-2 py-1 rounded">
-                              {match.away_score ?? 0}
-                            </span>
+                          <div className="flex flex-col items-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <span className="font-extrabold text-base text-slate-900 bg-slate-100 px-2 py-1 rounded">
+                                {match.home_score ?? 0}
+                              </span>
+                              <span className="text-gray-400 font-bold text-xs">-</span>
+                              <span className="font-extrabold text-base text-slate-900 bg-slate-100 px-2 py-1 rounded">
+                                {match.away_score ?? 0}
+                              </span>
+                            </div>
+                            {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+                             match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
+                              <span className="text-[10px] font-bold text-slate-500 font-mono mt-1">
+                                ({match.home_penalty_score} - {match.away_penalty_score} pens)
+                              </span>
+                            )}
                           </div>
                         ) : (
                           <div className="bg-[#00D084]/10 px-3 py-1 rounded-full text-xs font-bold text-[#00B875] inline-block">
@@ -852,8 +860,14 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                                   </div>
                                   <div className="text-[10px] text-gray-400 font-semibold my-0.5 text-center">
                                     {isCompleted ? (
-                                      <span className="bg-slate-200 text-slate-800 px-1 rounded font-extrabold">
-                                        {m.home_score} - {m.away_score}
+                                      <span className="bg-slate-200 text-slate-800 px-1.5 py-0.5 rounded font-extrabold flex flex-col items-center">
+                                        <span>{m.home_score} - {m.away_score}</span>
+                                        {m.home_penalty_score !== null && m.home_penalty_score !== undefined &&
+                                         m.away_penalty_score !== null && m.away_penalty_score !== undefined && (
+                                          <span className="text-[8px] font-bold text-slate-500 font-mono mt-0.5">
+                                            ({m.home_penalty_score} - {m.away_penalty_score} pens)
+                                          </span>
+                                        )}
                                       </span>
                                     ) : (
                                       <span>VS</span>

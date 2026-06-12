@@ -269,6 +269,12 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
                             }`}>
                               {match.home_score ?? 0} - {match.away_score ?? 0}
                             </div>
+                            {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+                             match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
+                              <span className="mt-1 text-[10px] font-bold text-slate-500 font-mono">
+                                ({match.home_penalty_score} - {match.away_penalty_score} pens)
+                              </span>
+                            )}
                             <span className={`mt-1.5 text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
                               isLive ? 'text-white bg-green-500 animate-pulse' : 'text-slate-500 bg-slate-100'
                             }`}>

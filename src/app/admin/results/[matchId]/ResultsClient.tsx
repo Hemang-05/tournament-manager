@@ -53,6 +53,14 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
 
       // Advancing knockout stage winners
       if (status?.toLowerCase() === 'completed') {
+        const isDraw = Number(homeScore) === Number(awayScore);
+        if (isDraw) {
+          alert('Match saved as completed draw. Redirecting to penalties to record the shootout.');
+          router.push(`/admin/penalties?matchId=${match.id}`);
+          router.refresh();
+          return;
+        }
+
         const isKnockout = match.stage && (
           match.stage.startsWith('Round of 16') ||
           match.stage.startsWith('Quarter-final') ||
@@ -119,6 +127,14 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
       }).eq('id', match.id);
 
       if (saveErr) throw saveErr;
+
+      const isDraw = Number(homeScore) === Number(awayScore);
+      if (isDraw) {
+        alert('Match regular time finished as a draw. Redirecting to penalties to record the shootout.');
+        router.push(`/admin/penalties?matchId=${match.id}`);
+        router.refresh();
+        return;
+      }
 
       // Advancing knockout stage winners / group stages
       const isKnockout = match.stage && (

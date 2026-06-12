@@ -3,10 +3,11 @@ import { getSessionFromCookies } from '@/lib/auth';
 import { getDisplayStatus } from '@/lib/tournament';
 import { getSelectedTournamentId } from '@/lib/tournament-server';
 import Link from 'next/link';
-import { Users, CalendarDays, ClipboardList, Wand2 } from 'lucide-react';
+import { Users, CalendarDays, ClipboardList, Wand2, Trophy } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import SelectTournamentList from '@/components/layout/SelectTournamentList';
 import TournamentStatusController from '@/components/layout/TournamentStatusController';
+import { calculateStandings, StandingRow } from '@/lib/standings';
 
 export default async function AdminDashboard() {
   const supabase = createServerClient();
@@ -72,13 +73,75 @@ export default async function AdminDashboard() {
   const { count: completedMatches } = await supabase.from('matches').select('*', { count: 'exact', head: true }).eq('tournament_id', tournamentId).eq('status', 'completed');
   const { count: pendingResults } = await supabase.from('matches').select('*', { count: 'exact', head: true }).eq('tournament_id', tournamentId).in('status', ['scheduled', 'live']);
 
-  // Fetch duplicate players (same name in different teams)
+  // Fetch teams and all matches for standings/tiebreakers
   const { data: teams } = await supabase
     .from('teams')
-    .select('id, name')
+    .select('id, name, group_name')
     .eq('tournament_id', tournamentId);
 
-  const teamIds = teams?.map(t => t.id) || [];
+  const { data: allMatches } = await supabase
+    .from('matches')
+    .select('*')
+    .eq('tournament_id', tournamentId);
+
+  const fetchedTeams = teams || [];
+  const fetchedMatches = allMatches || [];
+
+  // Calculate standings
+  const standings = calculateStandings(
+    fetchedTeams,
+    fetchedMatches,
+    tournament.points_win ?? 3,
+    tournament.points_draw ?? 1,
+    tournament.points_loss ?? 0
+  );
+
+  // 1. Unresolved Match Draws (requiring match tie-breaker shootout)
+  const unresolvedMatchDraws = fetchedMatches.filter(m =>
+    m.status?.toLowerCase() === 'completed' &&
+    m.stage !== 'Group Tie-breaker' &&
+    m.stage !== 'League Tie-breaker' &&
+    m.home_score !== null &&
+    m.home_score === m.away_score &&
+    (m.home_penalty_score === null || m.home_penalty_score === undefined ||
+     m.away_penalty_score === null || m.away_penalty_score === undefined)
+  );
+
+  // 2. Group Standings Ties (requiring group tie-breaker shootout)
+  const groupStandingsTies: { teamA: StandingRow; teamB: StandingRow; groupName: string | null }[] = [];
+  
+  const standingsByGroup: Record<string, StandingRow[]> = {};
+  standings.forEach(row => {
+    const grp = row.group_name || 'default';
+    if (!standingsByGroup[grp]) standingsByGroup[grp] = [];
+    standingsByGroup[grp].push(row);
+  });
+
+  Object.entries(standingsByGroup).forEach(([grp, rows]) => {
+    for (let i = 0; i < rows.length; i++) {
+      for (let j = i + 1; j < rows.length; j++) {
+        const teamA = rows[i];
+        const teamB = rows[j];
+        if (teamA.points === teamB.points && teamA.gd === teamB.gd) {
+          const shootoutExists = fetchedMatches.some(m =>
+            (m.stage === 'Group Tie-breaker' || m.stage === 'League Tie-breaker') &&
+            m.status?.toLowerCase() === 'completed' &&
+            ((m.home_team_id === teamA.team_id && m.away_team_id === teamB.team_id) ||
+             (m.home_team_id === teamB.team_id && m.away_team_id === teamA.team_id))
+          );
+          if (!shootoutExists) {
+            groupStandingsTies.push({
+              teamA,
+              teamB,
+              groupName: grp === 'default' ? null : grp
+            });
+          }
+        }
+      }
+    }
+  });
+
+  const teamIds = fetchedTeams.map(t => t.id);
   let duplicatePlayers: { name: string; teams: string[] }[] = [];
 
   if (teamIds.length > 0) {
@@ -166,6 +229,68 @@ export default async function AdminDashboard() {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* 1. Unresolved Match Draws Alert */}
+      {unresolvedMatchDraws.length > 0 && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-5 rounded-r-xl shadow-sm space-y-3">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-red-600 flex-shrink-0 animate-bounce" />
+            <h3 className="text-sm font-bold text-red-800 uppercase tracking-wide">Action Required: Match Draw Tie-breaker Shootout</h3>
+          </div>
+          <p className="text-xs text-red-700 leading-relaxed">
+            The following matches ended in a draw. Every match must be resolved. Please log penalty shootouts for these matches:
+          </p>
+          <div className="space-y-2">
+            {unresolvedMatchDraws.map((match) => {
+              const homeTeam = fetchedTeams.find(t => t.id === match.home_team_id);
+              const awayTeam = fetchedTeams.find(t => t.id === match.away_team_id);
+              return (
+                <div key={match.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/70 p-3.5 rounded-xl border border-red-200/50">
+                  <span className="text-xs font-semibold text-red-900">
+                    <span className="font-bold">{homeTeam?.name || 'Home Team'}</span> {match.home_score} - {match.away_score} <span className="font-bold">{awayTeam?.name || 'Away Team'}</span>
+                    <span className="text-slate-500 font-medium ml-2">({match.stage})</span>
+                  </span>
+                  <Link
+                    href={`/admin/penalties?matchId=${match.id}`}
+                    className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-bold text-[11px] px-3.5 py-1.5 rounded-lg transition-colors shadow-sm"
+                  >
+                    Go to Penalties
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 2. Unresolved Standings Ties Alert */}
+      {groupStandingsTies.length > 0 && unresolvedMatchDraws.length === 0 && (
+        <div className="bg-amber-50 border-l-4 border-amber-500 p-5 rounded-r-xl shadow-sm space-y-3">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-amber-600 flex-shrink-0 animate-bounce" />
+            <h3 className="text-sm font-bold text-amber-800 uppercase tracking-wide">Action Required: Standings Tie-breaker penalties</h3>
+          </div>
+          <p className="text-xs text-amber-700 leading-relaxed">
+            Standings are tied in points and goal difference. Please conduct a penalty shootout between the following teams to resolve the final qualification/ranking order:
+          </p>
+          <div className="space-y-2">
+            {groupStandingsTies.map((tie, idx) => (
+              <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/70 p-3.5 rounded-xl border border-amber-200/50">
+                <span className="text-xs font-semibold text-amber-900">
+                  <span className="font-bold">{tie.teamA.team_name}</span> vs <span className="font-bold">{tie.teamB.team_name}</span>
+                  {tie.groupName && tie.groupName !== 'default' && ` (in ${tie.groupName})`}
+                </span>
+                <Link
+                  href={`/admin/penalties?teamA=${tie.teamA.team_id}&teamB=${tie.teamB.team_id}`}
+                  className="inline-flex items-center justify-center bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] px-3.5 py-1.5 rounded-lg transition-colors shadow-sm"
+                >
+                  Go to Penalties
+                </Link>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

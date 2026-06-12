@@ -35,7 +35,8 @@ interface Match {
   stage: string;
   matchday: number | null;
   match_date: string;
-  kick_off_time: string | null;
+  away_penalty_score?: number | null;
+  home_penalty_score?: number | null;
   status: string;
   motm_player_id: string | null;
   match_events: MatchEvent[];
@@ -232,6 +233,12 @@ export default function ResultsClient({
                               <div className="font-mono text-xl sm:text-2xl font-black bg-[#0A1628] text-[#00D084] px-4 py-2 rounded-xl leading-none tracking-wider shadow-inner">
                                 {match.home_score} - {match.away_score}
                               </div>
+                              {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+                                match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
+                                 <span className="mt-1 text-[11px] font-bold text-slate-500 font-mono">
+                                   ({match.home_penalty_score} - {match.away_penalty_score} pens)
+                                 </span>
+                               )}
                               <span className="mt-2 text-[10px] font-bold text-[#64748B] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded uppercase tracking-wider">
                                 FT
                               </span>

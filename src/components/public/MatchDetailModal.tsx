@@ -37,6 +37,8 @@ interface Match {
   match_date?: string | null;
   kick_off_time?: string | null;
   match_events?: MatchEvent[];
+  home_penalty_score?: number | null;
+  away_penalty_score?: number | null;
 }
 
 interface MatchDetailModalProps {
@@ -132,6 +134,12 @@ export default function MatchDetailModal({
               <div className="font-mono text-3xl sm:text-4xl font-black text-[#00D084] tracking-tight bg-white/5 border border-white/15 px-5 py-2 rounded-xl shadow-inner leading-none">
                 {match.home_score ?? 0} - {match.away_score ?? 0}
               </div>
+              {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+               match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
+                <div className="mt-1 text-[11px] font-bold text-slate-400 font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                  ({match.home_penalty_score} - {match.away_penalty_score} on penalties)
+                </div>
+              )}
               <span className={`mt-2 text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
                 isLive ? 'text-white bg-green-500 animate-pulse' : 'text-slate-400 bg-white/5'
               }`}>

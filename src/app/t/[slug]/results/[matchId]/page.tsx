@@ -48,6 +48,8 @@ interface Match {
   ai_report: string | null;
   venue_name: string | null;
   match_events: MatchEvent[];
+  home_penalty_score?: number | null;
+  away_penalty_score?: number | null;
 }
 
 export default async function MatchDetailPage({
@@ -216,6 +218,12 @@ export default async function MatchDetailPage({
                 <div className="font-mono text-4xl sm:text-6xl font-black text-[#00D084] tracking-tight bg-white/5 border border-white/15 px-6 py-3 rounded-2xl shadow-inner">
                   {match.home_score} - {match.away_score}
                 </div>
+                {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+                 match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
+                  <div className="mt-2 text-sm font-bold text-slate-400 font-mono bg-white/5 px-3 py-1 rounded-xl border border-white/10">
+                    ({match.home_penalty_score} - {match.away_penalty_score} on penalties)
+                  </div>
+                )}
                 <span className="mt-3 text-xs font-bold text-slate-400 uppercase tracking-widest">
                   Full Time
                 </span>

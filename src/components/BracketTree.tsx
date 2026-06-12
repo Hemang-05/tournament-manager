@@ -13,6 +13,8 @@ interface BracketMatch {
   status: string;
   home_team?: { name: string; logo_url: string | null } | null;
   away_team?: { name: string; logo_url: string | null } | null;
+  home_penalty_score?: number | null;
+  away_penalty_score?: number | null;
 }
 
 interface BracketTreeProps {
@@ -40,6 +42,13 @@ export default function BracketTree({ matches, onMatchClick, isAdmin = false }: 
     if (m.status?.toLowerCase() !== 'completed' || m.home_score === null || m.away_score === null) return null;
     if (m.home_score > m.away_score) return m.home_team_id;
     if (m.away_score > m.home_score) return m.away_team_id;
+    
+    // Shootout resolution check
+    if (m.home_penalty_score !== null && m.home_penalty_score !== undefined &&
+        m.away_penalty_score !== null && m.away_penalty_score !== undefined) {
+      if (m.home_penalty_score > m.away_penalty_score) return m.home_team_id;
+      if (m.away_penalty_score > m.home_penalty_score) return m.away_team_id;
+    }
     return null; // Draw resolved manually/handled
   };
 
@@ -87,7 +96,19 @@ export default function BracketTree({ matches, onMatchClick, isAdmin = false }: 
               )}
               <span className="truncate text-xs">{getTeamName(m.home_team, defaultHomePlaceholder)}</span>
             </div>
-            <span className="font-mono text-xs">{m.home_score !== null ? m.home_score : '-'}</span>
+            <span className="font-mono text-xs">
+              {m.home_score !== null ? (
+                m.home_penalty_score !== null && m.home_penalty_score !== undefined ? (
+                  <span>
+                    {m.home_score} <span className="text-[10px] text-slate-500 font-bold bg-slate-100 px-1 py-0.2 rounded">({m.home_penalty_score})</span>
+                  </span>
+                ) : (
+                  m.home_score
+                )
+              ) : (
+                '-'
+              )}
+            </span>
           </div>
 
           {/* Away Team */}
@@ -104,7 +125,19 @@ export default function BracketTree({ matches, onMatchClick, isAdmin = false }: 
               )}
               <span className="truncate text-xs">{getTeamName(m.away_team, defaultAwayPlaceholder)}</span>
             </div>
-            <span className="font-mono text-xs">{m.away_score !== null ? m.away_score : '-'}</span>
+            <span className="font-mono text-xs">
+              {m.away_score !== null ? (
+                m.away_penalty_score !== null && m.away_penalty_score !== undefined ? (
+                  <span>
+                    {m.away_score} <span className="text-[10px] text-slate-500 font-bold bg-slate-100 px-1 py-0.2 rounded">({m.away_penalty_score})</span>
+                  </span>
+                ) : (
+                  m.away_score
+                )
+              ) : (
+                '-'
+              )}
+            </span>
           </div>
         </div>
 

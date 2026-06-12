@@ -44,6 +44,10 @@ export function calculateStandings(
   matches.forEach(match => {
     // Only calculate for completed matches with valid scores
     if (match.status?.toLowerCase() !== 'completed') return;
+    
+    // Skip tie-breaker shootout matches from adding normal stats
+    if (match.stage === 'Group Tie-breaker' || match.stage === 'League Tie-breaker') return;
+
     if (match.home_score === null || match.home_score === undefined) return;
     if (match.away_score === null || match.away_score === undefined) return;
 
@@ -75,11 +79,32 @@ export function calculateStandings(
       home.lost += 1;
       home.points += pointsLoss;
     } else {
-      home.drawn += 1;
-      home.points += pointsDraw;
+      // It's a draw in regular time
+      // Check if resolved by penalty shootout
+      const hasPenalties = match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+                           match.away_penalty_score !== null && match.away_penalty_score !== undefined;
+      
+      if (hasPenalties && match.home_penalty_score !== match.away_penalty_score) {
+        if (match.home_penalty_score > match.away_penalty_score) {
+          home.won += 1;
+          home.points += pointsWin;
 
-      away.drawn += 1;
-      away.points += pointsDraw;
+          away.lost += 1;
+          away.points += pointsLoss;
+        } else {
+          away.won += 1;
+          away.points += pointsWin;
+
+          home.lost += 1;
+          home.points += pointsLoss;
+        }
+      } else {
+        home.drawn += 1;
+        home.points += pointsDraw;
+
+        away.drawn += 1;
+        away.points += pointsDraw;
+      }
     }
   });
 
@@ -89,10 +114,28 @@ export function calculateStandings(
     return row;
   });
 
-  // Sort standings: Points desc, Goal Difference desc, Goals For desc, Name asc
+  // Sort standings: Points desc, Goal Difference desc, Shootout Head-to-Head desc, Goals For desc, Name asc
   return standings.sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
     if (b.gd !== a.gd) return b.gd - a.gd;
+
+    // Check if there is a completed Group Tie-breaker shootout match between these two teams
+    const shootout = matches.find(m => 
+      (m.stage === 'Group Tie-breaker' || m.stage === 'League Tie-breaker') &&
+      m.status?.toLowerCase() === 'completed' &&
+      ((m.home_team_id === a.team_id && m.away_team_id === b.team_id) ||
+       (m.home_team_id === b.team_id && m.away_team_id === a.team_id))
+    );
+
+    if (shootout) {
+      const isAHome = shootout.home_team_id === a.team_id;
+      const scoreA = isAHome ? shootout.home_score : shootout.away_score;
+      const scoreB = isAHome ? shootout.away_score : shootout.home_score;
+      if (scoreA !== null && scoreB !== null && scoreA !== scoreB) {
+        return scoreB - scoreA; // Shootout winner gets sorted above
+      }
+    }
+
     if (b.gf !== a.gf) return b.gf - a.gf;
     return a.team_name.localeCompare(b.team_name);
   });

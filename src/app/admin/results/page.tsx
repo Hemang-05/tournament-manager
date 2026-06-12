@@ -166,6 +166,13 @@ export default async function AdminResultsPage() {
                         </div>
                       )}
                       
+                      {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+                       match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
+                        <span className="mt-1 text-[10px] font-bold text-slate-500 font-mono">
+                          ({match.home_penalty_score} - {match.away_penalty_score} pens)
+                        </span>
+                      )}
+
                       {isLive ? (
                         <span className="mt-2 text-[9px] font-extrabold text-white bg-red-500 px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1 shadow-sm">
                           <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />

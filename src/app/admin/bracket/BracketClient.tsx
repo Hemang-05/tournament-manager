@@ -52,20 +52,34 @@ export default function BracketClient({ tournament, initialKnockoutMatches, team
       let winnerId = null;
 
       if (status?.toLowerCase() === 'completed') {
-        if (Number(homeScore) > Number(awayScore)) {
-          winnerId = selectedMatch.home_team_id;
-        } else if (Number(awayScore) > Number(homeScore)) {
-          winnerId = selectedMatch.away_team_id;
+        if (isDraw) {
+          // Update score in DB first
+          const { error: dbErr } = await supabase
+            .from('matches')
+            .update({
+              home_score: homeScore,
+              away_score: awayScore,
+              status
+            })
+            .eq('id', selectedMatch.id);
+
+          if (dbErr) throw dbErr;
+
+          alert('Knockout match ended in a draw. Redirecting to penalties to record the shootout.');
+          router.push(`/admin/penalties?matchId=${selectedMatch.id}`);
+          setIsModalOpen(false);
+          router.refresh();
+          return;
         } else {
-          // It's a draw, winner must be chosen via penalties
-          if (!penaltyWinnerId) {
-            throw new Error('For draw matches in knockout stages, you must select the team that advances (Penalty Shootout Winner).');
+          if (Number(homeScore) > Number(awayScore)) {
+            winnerId = selectedMatch.home_team_id;
+          } else {
+            winnerId = selectedMatch.away_team_id;
           }
-          winnerId = penaltyWinnerId;
         }
       }
 
-      // 1. Update score in DB
+      // 1. Update score in DB (for non-draw matches)
       const { error: dbErr } = await supabase
         .from('matches')
         .update({

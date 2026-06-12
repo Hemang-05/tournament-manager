@@ -10,6 +10,7 @@ interface Team {
   id: string;
   name: string;
   logo_url: string | null;
+  manager_name?: string | null;
 }
 
 interface Player {

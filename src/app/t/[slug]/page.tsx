@@ -26,7 +26,7 @@ export default async function TournamentOverviewPage({ params }: { params: { slu
   // Fetch teams
   const { data: teamsData } = await supabase
     .from('teams')
-    .select('id, name, logo_url, group_name')
+    .select('id, name, logo_url, group_name, manager_name')
     .eq('tournament_id', tournament.id)
     .order('name');
 

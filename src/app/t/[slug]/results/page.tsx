@@ -6,6 +6,7 @@ interface Team {
   id: string;
   name: string;
   logo_url: string | null;
+  manager_name?: string | null;
 }
 
 interface Player {
@@ -63,10 +64,10 @@ export default async function ResultsPage({
   // Fetch Teams
   const { data: teamsData } = await supabase
     .from("teams")
-    .select("id, name, logo_url")
+    .select("id, name, logo_url, manager_name")
     .eq("tournament_id", tournament.id);
   
-  teams = teamsData ?? [];
+  teams = (teamsData as any) ?? [];
 
   // Fetch Players for all teams in tournament
   if (teams.length > 0) {

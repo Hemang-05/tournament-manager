@@ -52,10 +52,10 @@ export default async function FixturesPage({
   // Fetch Teams
   const { data: teamsData } = await supabase
     .from("teams")
-    .select("id, name, logo_url")
+    .select("id, name, logo_url, manager_name")
     .eq("tournament_id", tournament.id);
   
-  teams = teamsData ?? [];
+  teams = (teamsData as any) ?? [];
 
   // Fetch matches with status scheduled or live, including match events
   const { data: matchesData } = await supabase

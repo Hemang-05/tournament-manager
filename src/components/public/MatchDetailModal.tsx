@@ -7,6 +7,7 @@ interface Team {
   id: string;
   name: string;
   logo_url: string | null;
+  manager_name?: string | null;
 }
 
 interface Player {
@@ -151,10 +152,18 @@ export default function MatchDetailModal({
           
           {/* Home Squad */}
           <div className="space-y-4 pb-4 md:pb-0 md:pr-6">
-            <h5 className="font-bold text-xs text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span>{homeTeam?.name} Squad</span>
-              <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-semibold">{homePlayers.length} Players</span>
-            </h5>
+            <div className="flex flex-col gap-1">
+              <h5 className="font-bold text-xs text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <span>{homeTeam?.name} Squad</span>
+                <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-semibold">{homePlayers.length} Players</span>
+              </h5>
+              {homeTeam?.manager_name && (
+                <div className="text-[11px] text-slate-500 flex items-center gap-1 font-medium">
+                  <User size={12} className="text-slate-400 flex-shrink-0" />
+                  <span>Manager: <span className="font-semibold text-slate-700">{homeTeam.manager_name}</span></span>
+                </div>
+              )}
+            </div>
             <div className="space-y-2 max-h-[35vh] overflow-y-auto pr-1">
               {homePlayers.length === 0 ? (
                 <p className="text-xs text-slate-400 py-4 text-center">No players registered.</p>
@@ -176,10 +185,18 @@ export default function MatchDetailModal({
 
           {/* Away Squad */}
           <div className="space-y-4 pt-4 md:pt-0 md:pl-6">
-            <h5 className="font-bold text-xs text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span>{awayTeam?.name} Squad</span>
-              <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-semibold">{awayPlayers.length} Players</span>
-            </h5>
+            <div className="flex flex-col gap-1">
+              <h5 className="font-bold text-xs text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <span>{awayTeam?.name} Squad</span>
+                <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-semibold">{awayPlayers.length} Players</span>
+              </h5>
+              {awayTeam?.manager_name && (
+                <div className="text-[11px] text-slate-500 flex items-center gap-1 font-medium">
+                  <User size={12} className="text-slate-400 flex-shrink-0" />
+                  <span>Manager: <span className="font-semibold text-slate-700">{awayTeam.manager_name}</span></span>
+                </div>
+              )}
+            </div>
             <div className="space-y-2 max-h-[35vh] overflow-y-auto pr-1">
               {awayPlayers.length === 0 ? (
                 <p className="text-xs text-slate-400 py-4 text-center">No players registered.</p>

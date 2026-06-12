@@ -214,7 +214,7 @@ export default function RegisterClient({ tournament, organiserName, initialTeams
               </div>
               <div>
                 <label htmlFor="reg-manager-name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Captain / Manager Name *
+                  Manager Name *
                 </label>
                 <input
                   id="reg-manager-name"

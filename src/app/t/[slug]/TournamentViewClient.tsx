@@ -255,39 +255,51 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
                         </div>
 
                         {/* Scores Box */}
-                        <div className="flex-1 flex items-center justify-between w-full min-w-0 px-2">
-                          <div className="flex-1 flex items-center justify-end gap-3 text-right">
-                            <span className="font-bold text-slate-900 text-sm truncate">
-                              {match.home_team?.name || 'TBD'}
-                            </span>
-                            <TeamLogo team={match.home_team} initials={getTeamInitials(match.home_team?.name || 'H')} />
-                          </div>
-
-                          <div className="mx-6 flex flex-col items-center flex-shrink-0">
-                            <div className={`font-mono text-base font-extrabold px-3 py-1 rounded-lg border ${
-                              isLive ? 'bg-green-50 border-green-200 text-green-600' : 'bg-slate-50 border-slate-200 text-slate-700'
-                            }`}>
-                              {match.home_score ?? 0} - {match.away_score ?? 0}
-                            </div>
-                            {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
-                             match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
-                              <span className="mt-1 text-[11px] font-bold text-emerald-600 font-mono">
-                                Pen {match.home_penalty_score} - {match.away_penalty_score}
+                        <div className="flex-1 flex flex-col items-center gap-2 w-full min-w-0">
+                          <div className="flex items-center justify-between w-full min-w-0 px-2">
+                            <div className="flex-1 flex items-center justify-end gap-3 text-right">
+                              <span className="font-bold text-slate-900 text-sm truncate">
+                                {match.home_team?.name || 'TBD'}
                               </span>
-                            )}
-                            <span className={`mt-1.5 text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
-                              isLive ? 'text-white bg-green-500 animate-pulse' : 'text-slate-500 bg-slate-100'
-                            }`}>
-                              {isLive ? 'LIVE' : 'FT'}
-                            </span>
+                              <TeamLogo team={match.home_team} initials={getTeamInitials(match.home_team?.name || 'H')} />
+                            </div>
+
+                            <div className="mx-6 flex flex-col items-center flex-shrink-0">
+                              <div className={`font-mono text-base font-extrabold px-3 py-1 rounded-lg border ${
+                                isLive ? 'bg-green-50 border-green-200 text-green-600' : 'bg-slate-50 border-slate-200 text-slate-700'
+                              }`}>
+                                {match.home_score ?? 0} - {match.away_score ?? 0}
+                              </div>
+                              {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+                               match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
+                                 <span className="mt-1 text-[11px] font-bold text-emerald-600 font-mono">
+                                   Pen {match.home_penalty_score} - {match.away_penalty_score}
+                                 </span>
+                               )}
+                              <span className={`mt-1.5 text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
+                                isLive ? 'text-white bg-green-500 animate-pulse' : 'text-slate-500 bg-slate-100'
+                              }`}>
+                                {isLive ? 'LIVE' : 'FT'}
+                              </span>
+                            </div>
+
+                            <div className="flex-1 flex items-center justify-start gap-3 text-left">
+                              <TeamLogo team={match.away_team} initials={getTeamInitials(match.away_team?.name || 'A')} />
+                              <span className="font-bold text-slate-900 text-sm truncate">
+                                {match.away_team?.name || 'TBD'}
+                              </span>
+                            </div>
                           </div>
 
-                          <div className="flex-1 flex items-center justify-start gap-3 text-left">
-                            <TeamLogo team={match.away_team} initials={getTeamInitials(match.away_team?.name || 'A')} />
-                            <span className="font-bold text-slate-900 text-sm truncate">
-                              {match.away_team?.name || 'TBD'}
-                            </span>
-                          </div>
+                          {/* MOTM if exists */}
+                          {(() => {
+                            const motmPlayer = match.motm_player_id ? players.find(p => p.id === match.motm_player_id) : null;
+                            return motmPlayer ? (
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">
+                                🏆 MOTM: {motmPlayer.name}
+                              </span>
+                            ) : null;
+                          })()}
                         </div>
                       </div>
                     );

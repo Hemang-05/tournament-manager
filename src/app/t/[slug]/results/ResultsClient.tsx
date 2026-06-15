@@ -272,8 +272,8 @@ export default function ResultsClient({
                               </div>
                               
                               {motmPlayer && (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-[#FFD166]/10 border border-[#FFD166]/30 px-2 py-0.5 font-bold text-[#D97706]">
-                                  MoTM: {motmPlayer.name}
+                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 font-bold text-amber-700">
+                                  🏆 MOTM: {motmPlayer.name}
                                 </span>
                               )}
                             </div>

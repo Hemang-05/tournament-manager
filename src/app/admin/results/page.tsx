@@ -33,6 +33,7 @@ export default async function AdminResultsPage() {
       away_score,
       home_penalty_score,
       away_penalty_score,
+      motm_player:motm_player_id (id, name),
       home_team:home_team_id (id, name, logo_url),
       away_team:away_team_id (id, name, logo_url)
     `)
@@ -141,59 +142,67 @@ export default async function AdminResultsPage() {
                   </div>
 
                   {/* Center: Teams & Score */}
-                  <div className="flex-1 flex items-center justify-between w-full min-w-0 px-2 sm:px-4">
-                    {/* Home Team */}
-                    <div className="flex-1 flex items-center justify-end gap-3 text-right min-w-0">
-                      <span className="font-bold text-gray-900 text-sm sm:text-base truncate">
-                        {match.home_team?.name || 'TBD'}
-                      </span>
-                      <TeamLogo team={match.home_team} initials={getTeamInitials(match.home_team?.name || 'H')} />
-                    </div>
+                  <div className="flex-1 flex flex-col items-center gap-2 w-full min-w-0">
+                    <div className="flex items-center justify-between w-full min-w-0 px-2 sm:px-4">
+                      {/* Home Team */}
+                      <div className="flex-1 flex items-center justify-end gap-3 text-right min-w-0">
+                        <span className="font-bold text-gray-900 text-sm sm:text-base truncate">
+                          {match.home_team?.name || 'TBD'}
+                        </span>
+                        <TeamLogo team={match.home_team} initials={getTeamInitials(match.home_team?.name || 'H')} />
+                      </div>
 
-                    {/* Scoreline Box */}
-                    <div className="mx-4 sm:mx-8 flex flex-col items-center justify-center flex-shrink-0">
-                      {isLive ? (
-                        <div className="flex items-center gap-2">
-                          <div className="font-mono text-lg sm:text-xl font-extrabold bg-red-50 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 flex items-center gap-1">
+                      {/* Scoreline Box */}
+                      <div className="mx-4 sm:mx-8 flex flex-col items-center justify-center flex-shrink-0">
+                        {isLive ? (
+                          <div className="flex items-center gap-2">
+                            <div className="font-mono text-lg sm:text-xl font-extrabold bg-red-50 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 flex items-center gap-1">
+                              <span>{match.home_score ?? 0}</span>
+                              <span className="text-red-400 font-normal">-</span>
+                              <span>{match.away_score ?? 0}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="font-mono text-lg sm:text-xl font-extrabold bg-gray-50 text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 flex items-center gap-1">
                             <span>{match.home_score ?? 0}</span>
-                            <span className="text-red-400 font-normal">-</span>
+                            <span className="text-gray-400 font-normal">-</span>
                             <span>{match.away_score ?? 0}</span>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="font-mono text-lg sm:text-xl font-extrabold bg-gray-50 text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 flex items-center gap-1">
-                          <span>{match.home_score ?? 0}</span>
-                          <span className="text-gray-400 font-normal">-</span>
-                          <span>{match.away_score ?? 0}</span>
-                        </div>
-                      )}
-                      
-                      {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
-                       match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
-                        <span className="mt-1 text-[10px] font-bold text-emerald-600 font-mono">
-                          Pen {match.home_penalty_score} - {match.away_penalty_score}
-                        </span>
-                      )}
+                        )}
+                        
+                        {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+                         match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
+                          <span className="mt-1 text-[10px] font-bold text-emerald-600 font-mono">
+                            Pen {match.home_penalty_score} - {match.away_penalty_score}
+                          </span>
+                        )}
 
-                      {isLive ? (
-                        <span className="mt-2 text-[9px] font-extrabold text-white bg-red-500 px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                          LIVE
+                        {isLive ? (
+                          <span className="mt-2 text-[9px] font-extrabold text-white bg-red-500 px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            LIVE
+                          </span>
+                        ) : (
+                          <span className="mt-2 text-[9px] font-bold text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded uppercase tracking-wider">
+                            FT
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Away Team */}
+                      <div className="flex-1 flex items-center justify-start gap-3 text-left min-w-0">
+                        <TeamLogo team={match.away_team} initials={getTeamInitials(match.away_team?.name || 'A')} />
+                        <span className="font-bold text-gray-900 text-sm sm:text-base truncate">
+                          {match.away_team?.name || 'TBD'}
                         </span>
-                      ) : (
-                        <span className="mt-2 text-[9px] font-bold text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded uppercase tracking-wider">
-                          FT
-                        </span>
-                      )}
+                      </div>
                     </div>
 
-                    {/* Away Team */}
-                    <div className="flex-1 flex items-center justify-start gap-3 text-left min-w-0">
-                      <TeamLogo team={match.away_team} initials={getTeamInitials(match.away_team?.name || 'A')} />
-                      <span className="font-bold text-gray-900 text-sm sm:text-base truncate">
-                        {match.away_team?.name || 'TBD'}
+                    {match.motm_player?.name && (
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">
+                        🏆 MOTM: {match.motm_player.name}
                       </span>
-                    </div>
+                    )}
                   </div>
 
                   {/* Right: Chevron link trigger */}

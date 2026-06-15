@@ -747,8 +747,8 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                             </div>
                             {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
                              match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
-                              <span className="text-[10px] font-bold text-slate-500 font-mono mt-1">
-                                ({match.home_penalty_score} - {match.away_penalty_score} pens)
+                              <span className="text-[10px] font-bold text-emerald-600 font-mono mt-1">
+                                Pen {match.home_penalty_score} - {match.away_penalty_score}
                               </span>
                             )}
                           </div>
@@ -864,8 +864,8 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                                         <span>{m.home_score} - {m.away_score}</span>
                                         {m.home_penalty_score !== null && m.home_penalty_score !== undefined &&
                                          m.away_penalty_score !== null && m.away_penalty_score !== undefined && (
-                                          <span className="text-[8px] font-bold text-slate-500 font-mono mt-0.5">
-                                            ({m.home_penalty_score} - {m.away_penalty_score} pens)
+                                          <span className="text-[8px] font-bold text-emerald-600 font-mono mt-0.5">
+                                            Pen {m.home_penalty_score} - {m.away_penalty_score}
                                           </span>
                                         )}
                                       </span>

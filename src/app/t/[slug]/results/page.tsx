@@ -36,6 +36,8 @@ interface Match {
   status: string;
   motm_player_id: string | null;
   match_events: MatchEvent[];
+  home_penalty_score?: number | null;
+  away_penalty_score?: number | null;
 }
 
 export default async function ResultsPage({

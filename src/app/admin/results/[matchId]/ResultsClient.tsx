@@ -334,14 +334,22 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
               <span className="font-bold text-lg text-center leading-tight">{match.home_team.name}</span>
             </div>
             
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-20 text-4xl font-bold flex items-center justify-center bg-white/10 rounded-lg border border-white/20 select-none">
-                {homeScore}
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-20 text-4xl font-bold flex items-center justify-center bg-white/10 rounded-lg border border-white/20 select-none">
+                  {homeScore}
+                </div>
+                <span className="text-2xl font-bold text-gray-500 select-none">-</span>
+                <div className="w-16 h-20 text-4xl font-bold flex items-center justify-center bg-white/10 rounded-lg border border-white/20 select-none">
+                  {awayScore}
+                </div>
               </div>
-              <span className="text-2xl font-bold text-gray-500 select-none">-</span>
-              <div className="w-16 h-20 text-4xl font-bold flex items-center justify-center bg-white/10 rounded-lg border border-white/20 select-none">
-                {awayScore}
-              </div>
+              {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+               match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
+                <div className="text-xs font-bold text-emerald-400 font-mono bg-white/10 px-2 py-0.5 rounded border border-white/20 mt-1">
+                  Pen {match.home_penalty_score} - {match.away_penalty_score}
+                </div>
+              )}
             </div>
             
             <div className="flex flex-col items-center gap-2 w-32">

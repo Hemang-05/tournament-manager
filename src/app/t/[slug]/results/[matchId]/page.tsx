@@ -220,8 +220,8 @@ export default async function MatchDetailPage({
                 </div>
                 {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
                  match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
-                  <div className="mt-2 text-sm font-bold text-slate-400 font-mono bg-white/5 px-3 py-1 rounded-xl border border-white/10">
-                    ({match.home_penalty_score} - {match.away_penalty_score} on penalties)
+                  <div className="mt-2 text-sm font-bold text-emerald-500 font-mono bg-white/5 px-3 py-1 rounded-xl border border-white/10">
+                    Pen {match.home_penalty_score} - {match.away_penalty_score}
                   </div>
                 )}
                 <span className="mt-3 text-xs font-bold text-slate-400 uppercase tracking-widest">

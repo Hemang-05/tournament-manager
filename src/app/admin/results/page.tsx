@@ -31,6 +31,8 @@ export default async function AdminResultsPage() {
       matchday,
       home_score,
       away_score,
+      home_penalty_score,
+      away_penalty_score,
       home_team:home_team_id (id, name, logo_url),
       away_team:away_team_id (id, name, logo_url)
     `)
@@ -168,8 +170,8 @@ export default async function AdminResultsPage() {
                       
                       {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
                        match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
-                        <span className="mt-1 text-[10px] font-bold text-slate-500 font-mono">
-                          ({match.home_penalty_score} - {match.away_penalty_score} pens)
+                        <span className="mt-1 text-[10px] font-bold text-emerald-600 font-mono">
+                          Pen {match.home_penalty_score} - {match.away_penalty_score}
                         </span>
                       )}
 

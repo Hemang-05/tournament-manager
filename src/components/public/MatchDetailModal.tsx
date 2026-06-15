@@ -136,8 +136,8 @@ export default function MatchDetailModal({
               </div>
               {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
                match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
-                <div className="mt-1 text-[11px] font-bold text-slate-400 font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10">
-                  ({match.home_penalty_score} - {match.away_penalty_score} on penalties)
+                <div className="mt-1 text-[11px] font-bold text-emerald-500 font-mono bg-[#00D084]/5 px-2 py-0.5 rounded border border-[#00D084]/15">
+                  Pen {match.home_penalty_score} - {match.away_penalty_score}
                 </div>
               )}
               <span className={`mt-2 text-[10px] font-bold px-2 py-0.5 rounded uppercase ${

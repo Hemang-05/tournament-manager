@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { User, Shield, ChevronLeft } from 'lucide-react';
 import { calculateStandings } from '@/lib/standings';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PublicTeamPage({ 
   params 
 }: { 

@@ -2,6 +2,8 @@ import { createServerClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 import ResultsClient from "./ResultsClient";
 
+export const dynamic = 'force-dynamic';
+
 interface Team {
   id: string;
   name: string;

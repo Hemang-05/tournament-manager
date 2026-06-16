@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { Info } from "lucide-react";
 import { calculateStandings, StandingRow } from "@/lib/standings";
 
+export const dynamic = 'force-dynamic';
+
 export default async function LeagueTablePage({
   params,
 }: {

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/image';
 import NextLink from 'next/link';
-import { Calendar, MapPin, Clock } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import MatchDetailModal from '@/components/public/MatchDetailModal';
 
 interface Team {
@@ -74,30 +74,27 @@ export default function FixturesClient({
     };
   }, [selectedMatch]);
 
-  // Group matches by matchday
-  const groupedByMatchday: Record<string, Match[]> = {};
-  matches.forEach((match) => {
-    let groupKey = "General Fixtures";
-    if (match.stage?.toLowerCase() !== "league") {
-      groupKey = match.stage || "Knockout Stage";
-    } else if (match.matchday) {
-      groupKey = `Matchday ${match.matchday}`;
-    }
-    if (!groupedByMatchday[groupKey]) {
-      groupedByMatchday[groupKey] = [];
-    }
-    groupedByMatchday[groupKey].push(match);
-  });
+  // Group matches chronologically by date, sorted by kick-off time within each day
+  const groupMatchesByDate = () => {
+    const sorted = [...matches].sort((a, b) => {
+      const dateA = a.match_date || '9999-12-31';
+      const dateB = b.match_date || '9999-12-31';
+      if (dateA !== dateB) return dateA.localeCompare(dateB);
+      const timeA = a.kick_off_time || '99:99';
+      const timeB = b.kick_off_time || '99:99';
+      return timeA.localeCompare(timeB);
+    });
+    const groups: Record<string, Match[]> = {};
+    sorted.forEach((m) => {
+      const dateKey = m.match_date || 'Unscheduled';
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(m);
+    });
+    return groups;
+  };
 
-  // Sort group keys
-  const sortedGroupKeys = Object.keys(groupedByMatchday).sort((a, b) => {
-    const aNum = parseInt(a.replace(/^\D+/g, ""), 10);
-    const bNum = parseInt(b.replace(/^\D+/g, ""), 10);
-    if (!isNaN(aNum) && !isNaN(bNum)) {
-      return aNum - bNum;
-    }
-    return a.localeCompare(b);
-  });
+  const matchesByDate = groupMatchesByDate();
+  const sortedDateKeys = Object.keys(matchesByDate).sort();
 
   // Helper to format date header
   const formatDateHeader = (dateStr: string) => {
@@ -168,111 +165,94 @@ export default function FixturesClient({
           </p>
         </div>
       ) : (
-        <div className="space-y-10">
-          {sortedGroupKeys.map((groupKey) => {
-            const groupMatches = groupedByMatchday[groupKey];
-            
-            // Group matches inside this matchday by their dates
-            const matchesByDate: Record<string, Match[]> = {};
-            groupMatches.forEach((m) => {
-              if (!matchesByDate[m.match_date]) {
-                matchesByDate[m.match_date] = [];
-              }
-              matchesByDate[m.match_date].push(m);
-            });
-
-            const sortedDates = Object.keys(matchesByDate).sort();
+        <div className="space-y-8">
+          {sortedDateKeys.map((dateKey) => {
+            const dateMatches = matchesByDate[dateKey];
 
             return (
-              <div key={groupKey} className="space-y-4">
-                {/* Matchday Header */}
+              <div key={dateKey} className="space-y-4">
+                {/* Date Header */}
                 <h2
                   className="text-xl font-bold text-[#0A1628] border-b border-[#E2E8F0] pb-2 uppercase tracking-wide text-sm"
                   style={{ fontFamily: "Georgia, serif" }}
                 >
-                  {groupKey}
+                  {dateKey !== 'Unscheduled' ? formatDateHeader(dateKey) : 'Unscheduled'}
                 </h2>
 
-                <div className="space-y-6">
-                  {sortedDates.map((dateStr) => {
-                    const dateMatches = matchesByDate[dateStr];
+                {/* Fixtures list */}
+                <div className="grid grid-cols-1 gap-4">
+                  {dateMatches.map((match) => {
+                    const homeTeam = teamsMap.get(match.home_team_id);
+                    const awayTeam = teamsMap.get(match.away_team_id);
+                    const isLive = match.status?.toLowerCase() === 'live';
+
                     return (
-                      <div key={dateStr} className="space-y-3">
-                        {/* Date Subheader */}
-                        <h3 className="text-xs font-bold text-[#64748B] tracking-wider uppercase bg-[#F8FAFC] py-1 px-3 rounded-md inline-block">
-                          {formatDateHeader(dateStr)}
-                        </h3>
+                      <div
+                        key={match.id}
+                        onClick={() => {
+                          if (isLive) setSelectedMatch(match);
+                        }}
+                        className={`group rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-sm transition-all ${
+                          isLive ? 'border-green-300 bg-green-50/10 cursor-pointer hover:border-green-400 hover:shadow-md' : 'hover:shadow-md'
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                          {/* Stage Badge + Time */}
+                          <div className="flex items-center gap-2 flex-shrink-0 sm:w-28">
+                            <span className="bg-[#0A1628]/5 text-[#0A1628] px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide whitespace-nowrap">
+                              {match.stage || 'League'}
+                            </span>
+                            <span className="text-[10px] text-[#64748B] font-mono font-semibold">
+                              {formatTime(match.kick_off_time)}
+                            </span>
+                          </div>
 
-                        {/* Fixtures list */}
-                        <div className="grid grid-cols-1 gap-4">
-                          {dateMatches.map((match) => {
-                            const homeTeam = teamsMap.get(match.home_team_id);
-                            const awayTeam = teamsMap.get(match.away_team_id);
-                            const isLive = match.status?.toLowerCase() === 'live';
+                          {/* Match Core: Home Team - Time - Away Team */}
+                          <div className="flex-1 flex items-center justify-between">
+                            {/* Home Team */}
+                            <div className="flex flex-1 items-center justify-end gap-3 text-right">
+                              <span className="text-sm sm:text-base font-bold text-[#0F172A] line-clamp-1">
+                                {homeTeam?.name || "Home Team"}
+                              </span>
+                              <TeamLogo team={homeTeam} fallbackText={getTeamInitials(homeTeam?.name || "H")} />
+                            </div>
 
-                            return (
-                              <div
-                                key={match.id}
-                                onClick={() => {
-                                  if (isLive) setSelectedMatch(match);
-                                }}
-                                className={`group rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-sm transition-all ${
-                                  isLive ? 'border-green-300 bg-green-50/10 cursor-pointer hover:border-green-400 hover:shadow-md' : 'hover:shadow-md'
-                                }`}
-                              >
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                  
-                                  {/* Match Core: Home Team - Time - Away Team */}
-                                  <div className="flex-1 flex items-center justify-between">
-                                    {/* Home Team */}
-                                    <div className="flex flex-1 items-center justify-end gap-3 text-right">
-                                      <span className="text-sm sm:text-base font-bold text-[#0F172A] line-clamp-1">
-                                        {homeTeam?.name || "Home Team"}
-                                      </span>
-                                      <TeamLogo team={homeTeam} fallbackText={getTeamInitials(homeTeam?.name || "H")} />
-                                    </div>
-
-                                    {/* Time / VS Box */}
-                                    <div className="mx-4 flex flex-col items-center justify-center flex-shrink-0">
-                                      {isLive ? (
-                                        <div className="font-mono text-sm sm:text-base font-extrabold bg-green-50 border border-green-200 text-green-600 px-3 py-1 rounded-lg">
-                                          {match.home_score ?? 0} - {match.away_score ?? 0}
-                                        </div>
-                                      ) : (
-                                        <div className="flex items-center gap-1 font-mono text-sm sm:text-base font-extrabold text-[#0A1628] bg-[#F8FAFC] border border-[#E2E8F0] px-3.5 py-1.5 rounded-lg">
-                                          <Clock className="h-3.5 w-3.5 text-[#00D084]" />
-                                          <span>{formatTime(match.kick_off_time)}</span>
-                                        </div>
-                                      )}
-                                    </div>
-
-                                    {/* Away Team */}
-                                    <div className="flex flex-1 items-center justify-start gap-3 text-left">
-                                      <TeamLogo team={awayTeam} fallbackText={getTeamInitials(awayTeam?.name || "A")} />
-                                      <span className="text-sm sm:text-base font-bold text-[#0F172A] line-clamp-1">
-                                        {awayTeam?.name || "Away Team"}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  {/* Right side: Venue & Status badge */}
-                                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 border-t border-slate-100 pt-3 sm:border-0 sm:pt-0">
-                                    {/* Venue */}
-                                    {match.venue_name && (
-                                      <div className="flex items-center gap-1 text-xs text-[#64748B] font-medium">
-                                        <MapPin className="h-3.5 w-3.5 text-[#00D084] flex-shrink-0" />
-                                        <span className="line-clamp-1">{match.venue_name}</span>
-                                      </div>
-                                    )}
-
-                                    {/* Status Badge */}
-                                    <StatusBadge status={match.status} />
-                                  </div>
-
+                            {/* Time / VS Box */}
+                            <div className="mx-4 flex flex-col items-center justify-center flex-shrink-0">
+                              {isLive ? (
+                                <div className="font-mono text-sm sm:text-base font-extrabold bg-green-50 border border-green-200 text-green-600 px-3 py-1 rounded-lg">
+                                  {match.home_score ?? 0} - {match.away_score ?? 0}
                                 </div>
+                              ) : (
+                                <span className="font-mono text-xs font-bold text-slate-400 bg-slate-50 border border-slate-200 px-2 py-1 rounded">
+                                  VS
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Away Team */}
+                            <div className="flex flex-1 items-center justify-start gap-3 text-left">
+                              <TeamLogo team={awayTeam} fallbackText={getTeamInitials(awayTeam?.name || "A")} />
+                              <span className="text-sm sm:text-base font-bold text-[#0F172A] line-clamp-1">
+                                {awayTeam?.name || "Away Team"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Right side: Venue & Status badge */}
+                          <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 border-t border-slate-100 pt-3 sm:border-0 sm:pt-0">
+                            {/* Venue */}
+                            {match.venue_name && (
+                              <div className="flex items-center gap-1 text-xs text-[#64748B] font-medium">
+                                <MapPin className="h-3.5 w-3.5 text-[#00D084] flex-shrink-0" />
+                                <span className="line-clamp-1">{match.venue_name}</span>
                               </div>
-                            );
-                          })}
+                            )}
+
+                            {/* Status Badge */}
+                            <StatusBadge status={match.status} />
+                          </div>
+
                         </div>
                       </div>
                     );

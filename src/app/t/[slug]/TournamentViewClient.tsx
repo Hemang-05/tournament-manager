@@ -124,7 +124,7 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
                     No standings calculated yet.
                   </div>
                 ) : (
-                  Object.entries(groupedStandings).map(([groupName, rows]) => (
+                  Object.entries(groupedStandings).sort(([a], [b]) => a.localeCompare(b)).map(([groupName, rows]) => (
                     <div key={groupName} className="space-y-3">
                       <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">
                         {groupName}

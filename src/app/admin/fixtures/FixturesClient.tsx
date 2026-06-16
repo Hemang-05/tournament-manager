@@ -580,12 +580,22 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
   };
   const timeSlots = getCalendarTimeSlots();
 
-  const groupMatchesByMatchday = (matchList: any[]) => {
+  const groupMatchesByDate = (matchList: any[]) => {
+    // Sort all matches chronologically first
+    const sorted = [...matchList].sort((a, b) => {
+      const dateA = a.match_date || '9999-12-31';
+      const dateB = b.match_date || '9999-12-31';
+      if (dateA !== dateB) return dateA.localeCompare(dateB);
+      const timeA = a.kick_off_time || '99:99';
+      const timeB = b.kick_off_time || '99:99';
+      return timeA.localeCompare(timeB);
+    });
+    // Group by date
     const groups: Record<string, any[]> = {};
-    matchList.forEach(m => {
-      const stageName = m.stage || 'League';
-      if (!groups[stageName]) groups[stageName] = [];
-      groups[stageName].push(m);
+    sorted.forEach(m => {
+      const dateKey = m.match_date || 'Unscheduled';
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(m);
     });
     return groups;
   };
@@ -1216,10 +1226,14 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
       {/* Render Matches List View */}
       {viewMode === 'list' && !generatedFixtures && matches.length > 0 && (
         <div className="space-y-8">
-          {Object.entries(groupMatchesByMatchday(matches)).map(([stageName, mds]) => (
-            <div key={stageName} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+          {Object.entries(groupMatchesByDate(matches)).map(([dateKey, mds]) => (
+            <div key={dateKey} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
               <div className="bg-[#0A1628] px-6 py-4 font-bold text-white flex items-center justify-between">
-                <span className="text-sm tracking-wider uppercase">{stageName}</span>
+                <span className="text-sm tracking-wider uppercase">
+                  {dateKey !== 'Unscheduled'
+                    ? new Date(dateKey + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
+                    : 'Unscheduled'}
+                </span>
                 <span className="bg-[#00D084] text-slate-900 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
                   {mds.length} Matches
                 </span>
@@ -1227,6 +1241,11 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
               <div className="divide-y divide-gray-100">
                 {mds.map(match => (
                   <div key={match.id} className="p-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between hover:bg-slate-50/50 transition-colors gap-4">
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[11px] font-bold whitespace-nowrap">
+                        {match.stage || 'League'}
+                      </span>
+                    </div>
                     <div className="flex-1 w-full grid grid-cols-3 items-center gap-4">
                       {/* Home team */}
                       <div className="text-right font-bold text-gray-900 truncate">
@@ -1258,9 +1277,6 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                             {match.kick_off_time ? match.kick_off_time.slice(0, 5) : 'TBD'}
                           </div>
                         )}
-                        <div className="text-[11px] text-gray-400 font-mono mt-1">
-                          {match.match_date ? new Date(match.match_date).toLocaleDateString('en-GB') : 'TBD'}
-                        </div>
                       </div>
                       
                       {/* Away team */}

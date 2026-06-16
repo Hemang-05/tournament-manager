@@ -118,6 +118,15 @@ export default async function AdminDashboard() {
   });
 
   Object.entries(standingsByGroup).forEach(([grp, rows]) => {
+    // Check if group stage matches are completed for this group
+    const groupMatches = grp === 'default'
+      ? fetchedMatches.filter(m => !m.stage || m.stage.toLowerCase() === 'league')
+      : fetchedMatches.filter(m => m.stage === grp);
+
+    const isGroupCompleted = groupMatches.length > 0 && groupMatches.every(m => m.status?.toLowerCase() === 'completed');
+
+    if (!isGroupCompleted) return;
+
     for (let i = 0; i < rows.length; i++) {
       for (let j = i + 1; j < rows.length; j++) {
         const teamA = rows[i];

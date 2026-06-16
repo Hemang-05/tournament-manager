@@ -11,13 +11,15 @@ export default function TeamsClient({
   tournamentId,
   playersPerTeam,
   tournamentSlug,
-  maxTeams
+  maxTeams,
+  tournamentFormat
 }: { 
   initialTeams: any[], 
   tournamentId: string,
   playersPerTeam: number,
   tournamentSlug: string,
-  maxTeams: number
+  maxTeams: number,
+  tournamentFormat?: string
 }) {
   const [teams, setTeams] = useState(initialTeams);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,6 +29,7 @@ export default function TeamsClient({
   const [editingTeam, setEditingTeam] = useState<any>(null);
   const [name, setName] = useState('');
   const [managerName, setManagerName] = useState('');
+  const [groupName, setGroupName] = useState('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [playerNames, setPlayerNames] = useState<string[]>(Array(playersPerTeam).fill(''));
   const [loading, setLoading] = useState(false);
@@ -45,6 +48,7 @@ export default function TeamsClient({
     setEditingTeam(team);
     setName(team?.name || '');
     setManagerName(team?.manager_name || '');
+    setGroupName(team?.group_name || '');
     setLogoFile(null);
     setPlayerNames(Array(playersPerTeam).fill(''));
     setIsModalOpen(true);
@@ -90,7 +94,7 @@ export default function TeamsClient({
     if (editingTeam) {
       const { data, error } = await supabase
         .from('teams')
-        .update({ name, manager_name: managerName, logo_url })
+        .update({ name, manager_name: managerName, logo_url, group_name: groupName || null })
         .eq('id', editingTeam.id)
         .select()
         .single();
@@ -111,7 +115,7 @@ export default function TeamsClient({
       }
       const { data, error } = await supabase
         .from('teams')
-        .insert({ tournament_id: tournamentId, name, manager_name: managerName, logo_url })
+        .insert({ tournament_id: tournamentId, name, manager_name: managerName, logo_url, group_name: groupName || null })
         .select()
         .single();
         
@@ -208,7 +212,14 @@ export default function TeamsClient({
                 )}
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-[#00D084] transition-colors">{team.name}</h3>
-              <p className="text-sm text-gray-500 mb-4">{team.manager_name || 'No manager'}</p>
+              <p className="text-sm text-gray-500 mb-2">{team.manager_name || 'No manager'}</p>
+              {team.group_name ? (
+                <span className="inline-block text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-full mb-4">
+                  {team.group_name}
+                </span>
+              ) : (
+                <div className="h-4 mb-4"></div>
+              )}
               <div className="mt-auto px-3 py-1 bg-gray-50 rounded-full text-xs font-medium text-gray-600 border border-gray-200">
                 {team.players?.[0]?.count || 0} Players
               </div>
@@ -240,6 +251,22 @@ export default function TeamsClient({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Manager Name</label>
                 <input type="text" value={managerName} onChange={e => setManagerName(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#00D084] focus:border-[#00D084] outline-none" />
               </div>
+              {(tournamentFormat?.toLowerCase() === 'league_knockout' || tournamentFormat?.toLowerCase() === 'league + knockout') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Group / Pool</label>
+                  <select 
+                    value={groupName} 
+                    onChange={e => setGroupName(e.target.value)} 
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm outline-none focus:ring-[#00D084] focus:border-[#00D084]"
+                  >
+                    <option value="">No Group</option>
+                    <option value="Group A">Group A</option>
+                    <option value="Group B">Group B</option>
+                    <option value="Group C">Group C</option>
+                    <option value="Group D">Group D</option>
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Team Logo</label>
                 <div className="mt-1 flex items-center gap-4">

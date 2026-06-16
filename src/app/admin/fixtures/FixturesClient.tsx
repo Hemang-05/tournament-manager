@@ -167,7 +167,21 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
     setDate(match?.match_date ? match.match_date : '');
     setTime(match?.kick_off_time || '');
     setStatus(match?.status || 'Scheduled');
-    setStage(match?.stage || 'League');
+    
+    let initialStage = match?.stage || 'League';
+    if (!isKnockoutStage(initialStage)) {
+      const hId = match?.home_team_id;
+      const aId = match?.away_team_id;
+      const homeTeamObj = teams.find((t: any) => t.id === hId);
+      const awayTeamObj = teams.find((t: any) => t.id === aId);
+      const homeGrp = hId ? (teamGroupAssignments[hId] || homeTeamObj?.group_name) : null;
+      const awayGrp = aId ? (teamGroupAssignments[aId] || awayTeamObj?.group_name) : null;
+      const grp = homeGrp || awayGrp;
+      if (grp) {
+        initialStage = grp;
+      }
+    }
+    setStage(initialStage);
     setIsModalOpen(true);
   };
 
@@ -175,6 +189,28 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
     setIsModalOpen(false);
     setEditingMatch(null);
     setEditingPreviewIndex(null);
+  };
+
+  const handleHomeTeamChange = (teamId: string) => {
+    setHomeTeam(teamId);
+    if (!isKnockoutStage(stage)) {
+      const teamObj = teams.find((t: any) => t.id === teamId);
+      const grp = teamGroupAssignments[teamId] || teamObj?.group_name;
+      if (grp) {
+        setStage(grp);
+      }
+    }
+  };
+
+  const handleAwayTeamChange = (teamId: string) => {
+    setAwayTeam(teamId);
+    if (!isKnockoutStage(stage)) {
+      const teamObj = teams.find((t: any) => t.id === teamId);
+      const grp = teamGroupAssignments[teamId] || teamObj?.group_name;
+      if (grp) {
+        setStage(grp);
+      }
+    }
   };
 
   const handleSaveMatch = async (e: React.FormEvent) => {
@@ -1035,9 +1071,21 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                     <tr key={i} className="hover:bg-slate-50/50">
                       <td className="p-3 font-semibold text-gray-900">MD {f.matchday}</td>
                       <td className="p-3">
-                        <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[11px] font-bold">
-                          {f.stage || 'League'}
-                        </span>
+                        <input
+                          type="text"
+                          value={f.stage || ''}
+                          onChange={e => {
+                            const val = e.target.value;
+                            setGeneratedFixtures(prev => {
+                              if (!prev) return null;
+                              const copy = [...prev];
+                              copy[i] = { ...copy[i], stage: val };
+                              return copy;
+                            });
+                          }}
+                          placeholder="League"
+                          className="bg-transparent border border-transparent hover:bg-slate-100 hover:border-slate-300 focus:bg-white focus:border-slate-300 rounded px-1.5 py-0.5 text-xs font-bold text-gray-700 outline-none w-24 transition-all"
+                        />
                       </td>
                       <td className="p-3 text-gray-600 font-mono">{f.match_date}</td>
                       
@@ -1055,7 +1103,20 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                               setGeneratedFixtures(prev => {
                                 if (!prev) return null;
                                 const copy = [...prev];
-                                copy[i] = { ...copy[i], home_team_id: val || null };
+                                
+                                // Auto-update group stage name to team's group
+                                let newStage = copy[i].stage;
+                                if (val) {
+                                  const teamObj = teams.find((t: any) => t.id === val);
+                                  const grp = teamGroupAssignments[val] || teamObj?.group_name;
+                                  if (grp) newStage = grp;
+                                }
+                                
+                                copy[i] = { 
+                                  ...copy[i], 
+                                  home_team_id: val || null,
+                                  stage: newStage
+                                };
                                 return copy;
                               });
                             }}
@@ -1089,7 +1150,20 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                               setGeneratedFixtures(prev => {
                                 if (!prev) return null;
                                 const copy = [...prev];
-                                copy[i] = { ...copy[i], away_team_id: val || null };
+                                
+                                // Auto-update group stage name to team's group
+                                let newStage = copy[i].stage;
+                                if (val) {
+                                  const teamObj = teams.find((t: any) => t.id === val);
+                                  const grp = teamGroupAssignments[val] || teamObj?.group_name;
+                                  if (grp) newStage = grp;
+                                }
+                                
+                                copy[i] = { 
+                                  ...copy[i], 
+                                  away_team_id: val || null,
+                                  stage: newStage
+                                };
                                 return copy;
                               });
                             }}
@@ -1357,14 +1431,14 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Home Team</label>
-                  <select value={homeTeam} onChange={e => setHomeTeam(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-[#00D084]/40">
+                  <select value={homeTeam} onChange={e => handleHomeTeamChange(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-[#00D084]/40">
                     <option value="">Select Team (or TBD)</option>
                     {teams.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Away Team</label>
-                  <select value={awayTeam} onChange={e => setAwayTeam(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-[#00D084]/40">
+                  <select value={awayTeam} onChange={e => handleAwayTeamChange(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-[#00D084]/40">
                     <option value="">Select Team (or TBD)</option>
                     {teams.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>

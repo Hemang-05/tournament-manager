@@ -41,7 +41,7 @@ export default async function FixturesPage() {
   // Fetch all teams for manual adding/editing
   const { data: teams } = await supabase
     .from('teams')
-    .select('id, name')
+    .select('id, name, group_name')
     .eq('tournament_id', tournamentId)
     .order('name');
 

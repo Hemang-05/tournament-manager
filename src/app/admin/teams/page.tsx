@@ -17,16 +17,17 @@ export default async function TeamsPage() {
     .eq('tournament_id', tournamentId)
     .order('name');
 
-  // Fetch players_per_team setting and max_teams
+  // Fetch players_per_team setting, max_teams, and format
   const { data: tournament } = await supabase
     .from('tournaments')
-    .select('players_per_team, slug, max_teams')
+    .select('players_per_team, slug, max_teams, format')
     .eq('id', tournamentId)
     .single();
 
   const playersPerTeam = tournament?.players_per_team || 8;
   const tournamentSlug = tournament?.slug || '';
   const maxTeams = tournament?.max_teams || 8;
+  const tournamentFormat = tournament?.format || 'league';
 
   return (
     <div className="p-8">
@@ -36,6 +37,7 @@ export default async function TeamsPage() {
         playersPerTeam={playersPerTeam} 
         tournamentSlug={tournamentSlug}
         maxTeams={maxTeams}
+        tournamentFormat={tournamentFormat}
       />
     </div>
   );

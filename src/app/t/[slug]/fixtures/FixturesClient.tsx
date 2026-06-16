@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/image';
 import NextLink from 'next/link';
-import { MapPin } from 'lucide-react';
+import { Calendar, MapPin } from 'lucide-react';
 import MatchDetailModal from '@/components/public/MatchDetailModal';
 
 interface Team {

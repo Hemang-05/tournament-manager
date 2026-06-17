@@ -514,6 +514,78 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
     }
   };
 
+  const handleDeleteMatch = async (match: any) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete the match between ${match.home_team?.name || 'TBD'} and ${match.away_team?.name || 'TBD'}? This cannot be undone and will update all standings.`);
+    if (!confirmDelete) return;
+
+    setGenerating(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // 1. Fetch all match events for this match
+      const { data: events, error: eventsErr } = await supabase
+        .from('match_events')
+        .select('*')
+        .eq('match_id', match.id);
+
+      if (eventsErr) throw eventsErr;
+
+      // 2. Decrement stats for players involved in this match's events
+      if (events && events.length > 0) {
+        for (const event of events) {
+          const type = event.type?.toLowerCase();
+          const pId = event.player_id;
+          if (pId) {
+            if (type === 'goal') {
+              const { data: p } = await supabase.from('players').select('goals_scored').eq('id', pId).single();
+              if (p) {
+                await supabase.from('players').update({ goals_scored: Math.max(0, (p.goals_scored || 0) - 1) }).eq('id', pId);
+              }
+            } else if (type === 'yellow_card') {
+              const { data: p } = await supabase.from('players').select('yellow_cards').eq('id', pId).single();
+              if (p) {
+                await supabase.from('players').update({ yellow_cards: Math.max(0, (p.yellow_cards || 0) - 1) }).eq('id', pId);
+              }
+            } else if (type === 'red_card') {
+              const { data: p } = await supabase.from('players').select('red_cards').eq('id', pId).single();
+              if (p) {
+                await supabase.from('players').update({ red_cards: Math.max(0, (p.red_cards || 0) - 1) }).eq('id', pId);
+              }
+            }
+          }
+        }
+
+        // 3. Delete match events
+        const { error: eventsDelErr } = await supabase
+          .from('match_events')
+          .delete()
+          .eq('match_id', match.id);
+
+        if (eventsDelErr) throw eventsDelErr;
+      }
+
+      // 4. Delete the match itself
+      const { error: matchDelErr } = await supabase
+        .from('matches')
+        .delete()
+        .eq('id', match.id);
+
+      if (matchDelErr) throw matchDelErr;
+
+      // 5. Re-run group playoffs resolution if it is group-playoffs format
+      const { resolveGroupPlayoffs } = await import('@/lib/bracket');
+      await resolveGroupPlayoffs(supabase, tournament.id);
+
+      setSuccess('Match deleted successfully and standings updated!');
+      router.refresh();
+    } catch (err: any) {
+      setError(`Failed to delete match: ${err.message}`);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   // Drag and Drop rescheduling in calendar view
   const handleDragStart = (e: React.DragEvent, matchId: string) => {
     e.dataTransfer.setData('text/plain', matchId);
@@ -1302,8 +1374,11 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                       }`}>
                         {match.status ? match.status.charAt(0).toUpperCase() + match.status.slice(1) : ''}
                       </span>
-                      <button onClick={() => openModal(match)} className="text-gray-400 hover:text-blue-600 transition-colors p-1">
+                      <button onClick={() => openModal(match)} className="text-gray-400 hover:text-blue-600 transition-colors p-1" title="Edit Match Details">
                         <Edit size={16} />
+                      </button>
+                      <button onClick={() => handleDeleteMatch(match)} className="text-gray-400 hover:text-red-600 transition-colors p-1 cursor-pointer" title="Delete Match">
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </div>
@@ -1489,6 +1564,18 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
               </div>
               
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                {editingMatch && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeModal();
+                      handleDeleteMatch(editingMatch);
+                    }}
+                    className="mr-auto px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg font-semibold text-sm transition-colors flex items-center gap-1.5"
+                  >
+                    <Trash2 size={16} /> Delete Match
+                  </button>
+                )}
                 <button type="button" onClick={closeModal} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-semibold text-sm transition-colors">Cancel</button>
                 <button type="submit" disabled={generating} className="px-5 py-2 bg-[#00D084] hover:bg-[#00B875] text-white rounded-lg font-bold text-sm transition-all flex items-center gap-2 shadow-lg shadow-[#00D084]/15">
                   {generating && <Loader2 size={16} className="animate-spin" />}

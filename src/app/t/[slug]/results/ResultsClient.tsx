@@ -142,7 +142,7 @@ export default function ResultsClient({
         const player = playersMap.get(event.player_id);
         const name = player ? player.name.split(" ")[0] : "Unknown";
         const isOwnGoal = event.type?.toLowerCase() === "own_goal";
-        return `${name}${isOwnGoal ? " (OG)" : ""}`;
+        return isOwnGoal ? "OG" : name;
       });
 
     return scorers.join(", ");

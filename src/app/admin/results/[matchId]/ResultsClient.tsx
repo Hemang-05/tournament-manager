@@ -675,7 +675,9 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
             {events.length > 0 ? (
               events.map((e:any) => (
                 <div key={e.id} className="p-3 flex items-center gap-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex-1 font-medium text-sm text-gray-900">{e.player?.name}</div>
+                  <div className="flex-1 font-medium text-sm text-gray-900">
+                    {getNormalizedType(e.type || e.event_type) === 'own goal' ? 'OG' : (e.player?.name || 'Unknown')}
+                  </div>
                   <div className="text-sm text-gray-600 w-24 text-right">
                     {getNormalizedType(e.type || e.event_type) === 'yellow card' ? '🟨 Card' : 
                      getNormalizedType(e.type || e.event_type) === 'red card' ? '🟥 Card' : 

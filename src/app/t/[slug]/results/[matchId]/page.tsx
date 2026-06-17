@@ -308,12 +308,23 @@ export default async function MatchDetailPage({
                       <span className="text-lg">{meta.icon}</span>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                         <span className="text-[#0F172A] font-bold">
-                          {player?.name || "Player"}
+                          {event.type?.toLowerCase() === 'own_goal' ? "OG" : (player?.name || "Player")}
                         </span>
-                        <span className="hidden sm:inline text-slate-400">•</span>
-                        <span className="text-xs text-slate-500 font-medium">
-                          {playerTeam?.name || "Team"} ({meta.label})
-                        </span>
+                        {event.type?.toLowerCase() !== 'own_goal' ? (
+                          <>
+                            <span className="hidden sm:inline text-slate-400">•</span>
+                            <span className="text-xs text-slate-500 font-medium">
+                              {playerTeam?.name || "Team"} ({meta.label})
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="hidden sm:inline text-slate-400">•</span>
+                            <span className="text-xs text-slate-500 font-medium">
+                              Own Goal
+                            </span>
+                          </>
+                        )}
                       </div>
                       <span className="text-xs font-mono font-bold text-slate-400 bg-white/40 border border-slate-200/30 px-1.5 py-0.5 rounded">
                         {event.minute}&apos;

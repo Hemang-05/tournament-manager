@@ -30,7 +30,7 @@ export default async function MatchResultPage({ params }: { params: { matchId: s
     .from('match_events')
     .select(`
       *,
-      player:player_id (name)
+      player:player_id (name, team_id)
     `)
     .eq('match_id', params.matchId)
     .order('minute', { ascending: true });

@@ -46,7 +46,7 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
         home_score: homeScore,
         away_score: awayScore,
         status,
-        motm_player_id: null
+        motm_player_id: motmId || null
       }).eq('id', match.id);
 
       if (saveErr) throw saveErr;
@@ -271,7 +271,7 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
         body: JSON.stringify({
           event_id: event.id,
           player_id: event.player_id,
-          event_type: event.event_type,
+          event_type: event.type || event.event_type,
           team_id: event.player?.team_id || match.home_team_id
         })
       });
@@ -336,13 +336,21 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
             
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-20 text-4xl font-bold flex items-center justify-center bg-white/10 rounded-lg border border-white/20 select-none">
-                  {homeScore}
-                </div>
+                <input
+                  type="number"
+                  min="0"
+                  value={homeScore}
+                  onChange={(e) => setHomeScore(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-16 h-20 text-4xl font-bold text-center bg-white/10 text-white rounded-lg border border-white/20 focus:outline-none focus:border-[#00D084] focus:ring-1 focus:ring-[#00D084] transition-all"
+                />
                 <span className="text-2xl font-bold text-gray-500 select-none">-</span>
-                <div className="w-16 h-20 text-4xl font-bold flex items-center justify-center bg-white/10 rounded-lg border border-white/20 select-none">
-                  {awayScore}
-                </div>
+                <input
+                  type="number"
+                  min="0"
+                  value={awayScore}
+                  onChange={(e) => setAwayScore(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-16 h-20 text-4xl font-bold text-center bg-white/10 text-white rounded-lg border border-white/20 focus:outline-none focus:border-[#00D084] focus:ring-1 focus:ring-[#00D084] transition-all"
+                />
               </div>
               {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
                match.away_penalty_score !== null && match.away_penalty_score !== undefined && (

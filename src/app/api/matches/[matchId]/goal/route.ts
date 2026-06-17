@@ -172,7 +172,22 @@ export async function DELETE(
       return NextResponse.json({ error: 'event_id is required' }, { status: 400 });
     }
 
-    // Get match
+    // 1. Get event details from db before deletion to ensure we have the correct data
+    const { data: dbEvent, error: fetchEventError } = await supabase
+      .from('match_events')
+      .select('*, player:player_id(team_id)')
+      .eq('id', event_id)
+      .single();
+
+    if (fetchEventError || !dbEvent) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
+
+    const eventPlayerId = dbEvent.player_id || player_id;
+    const eventType = dbEvent.type || event_type;
+    const eventTeamId = dbEvent.player?.team_id || team_id;
+
+    // 2. Get match
     const { data: match } = await supabase
       .from('matches')
       .select('id, home_team_id, away_team_id, home_score, away_score')
@@ -183,7 +198,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Match not found' }, { status: 404 });
     }
 
-    // Delete the event
+    // 3. Delete the event
     const { error: deleteError } = await supabase
       .from('match_events')
       .delete()
@@ -193,38 +208,38 @@ export async function DELETE(
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
     }
 
-    const eventTypeLower = event_type?.toLowerCase().replace(/_/g, ' ');
+    const eventTypeLower = eventType?.toLowerCase().replace(/_/g, ' ');
 
-    // Reverse score changes
+    // 4. Reverse score changes
     if (eventTypeLower === 'goal') {
-      if (team_id === match.home_team_id) {
+      if (eventTeamId === match.home_team_id) {
         await supabase.from('matches').update({ home_score: Math.max(0, (match.home_score || 0) - 1) }).eq('id', params.matchId);
       } else {
         await supabase.from('matches').update({ away_score: Math.max(0, (match.away_score || 0) - 1) }).eq('id', params.matchId);
       }
 
       // Decrement player goals
-      if (player_id) {
-        const { data: player } = await supabase.from('players').select('goals_scored').eq('id', player_id).single();
+      if (eventPlayerId) {
+        const { data: player } = await supabase.from('players').select('goals_scored').eq('id', eventPlayerId).single();
         if (player) {
-          await supabase.from('players').update({ goals_scored: Math.max(0, (player.goals_scored || 0) - 1) }).eq('id', player_id);
+          await supabase.from('players').update({ goals_scored: Math.max(0, (player.goals_scored || 0) - 1) }).eq('id', eventPlayerId);
         }
       }
     } else if (eventTypeLower === 'own goal') {
-      if (team_id === match.home_team_id) {
+      if (eventTeamId === match.home_team_id) {
         await supabase.from('matches').update({ away_score: Math.max(0, (match.away_score || 0) - 1) }).eq('id', params.matchId);
       } else {
         await supabase.from('matches').update({ home_score: Math.max(0, (match.home_score || 0) - 1) }).eq('id', params.matchId);
       }
-    } else if (eventTypeLower === 'yellow card' && player_id) {
-      const { data: player } = await supabase.from('players').select('yellow_cards').eq('id', player_id).single();
+    } else if (eventTypeLower === 'yellow card' && eventPlayerId) {
+      const { data: player } = await supabase.from('players').select('yellow_cards').eq('id', eventPlayerId).single();
       if (player) {
-        await supabase.from('players').update({ yellow_cards: Math.max(0, (player.yellow_cards || 0) - 1) }).eq('id', player_id);
+        await supabase.from('players').update({ yellow_cards: Math.max(0, (player.yellow_cards || 0) - 1) }).eq('id', eventPlayerId);
       }
-    } else if (eventTypeLower === 'red card' && player_id) {
-      const { data: player } = await supabase.from('players').select('red_cards').eq('id', player_id).single();
+    } else if (eventTypeLower === 'red card' && eventPlayerId) {
+      const { data: player } = await supabase.from('players').select('red_cards').eq('id', eventPlayerId).single();
       if (player) {
-        await supabase.from('players').update({ red_cards: Math.max(0, (player.red_cards || 0) - 1) }).eq('id', player_id);
+        await supabase.from('players').update({ red_cards: Math.max(0, (player.red_cards || 0) - 1) }).eq('id', eventPlayerId);
       }
     }
 

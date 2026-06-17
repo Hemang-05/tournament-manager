@@ -54,7 +54,7 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
   const [awayTeam, setAwayTeam] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
-  const [status, setStatus] = useState('Scheduled');
+  const [status, setStatus] = useState('scheduled');
   const [stage, setStage] = useState('League');
 
   const router = useRouter();
@@ -166,7 +166,7 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
     setAwayTeam(match?.away_team_id || '');
     setDate(match?.match_date ? match.match_date : '');
     setTime(match?.kick_off_time || '');
-    setStatus(match?.status || 'Scheduled');
+    setStatus(match?.status?.toLowerCase() || 'scheduled');
     
     let initialStage = match?.stage || 'League';
     if (!isKnockoutStage(initialStage)) {
@@ -228,7 +228,7 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
             away_team_id: awayTeam || null,
             match_date: date,
             kick_off_time: time,
-            status,
+            status: status.toLowerCase(),
             stage
           };
           return copy;
@@ -245,7 +245,7 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
             away_team_id: awayTeam || null,
             match_date: date,
             kick_off_time: time,
-            status,
+            status: status.toLowerCase(),
             stage
           })
           .eq('id', editingMatch.id);
@@ -260,7 +260,7 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
             away_team_id: awayTeam || null,
             match_date: date,
             kick_off_time: time,
-            status,
+            status: status.toLowerCase(),
             stage,
             matchday: 1
           });
@@ -1475,11 +1475,11 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
-                  <select value={status} onChange={e => setStatus(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-[#00D084]/40">
-                    <option value="Scheduled">Scheduled</option>
-                    <option value="Live">Live</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Postponed">Postponed</option>
+                  <select value={status?.toLowerCase()} onChange={e => setStatus(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-[#00D084]/40">
+                    <option value="scheduled">Scheduled</option>
+                    <option value="live">Live</option>
+                    <option value="completed">Completed</option>
+                    <option value="postponed">Postponed</option>
                   </select>
                 </div>
                 <div>

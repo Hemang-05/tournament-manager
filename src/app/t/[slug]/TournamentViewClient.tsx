@@ -186,7 +186,7 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
                         <div className="flex-1 flex items-center justify-between w-full min-w-0 px-2">
                           <div className="flex-1 flex items-center justify-end gap-3 text-right">
                             <span className="font-bold text-slate-900 text-sm truncate">
-                              {match.home_team?.name || getTeamPlaceholder(match.stage, 'home', matches)}
+                              {match.home_team?.name || getTeamPlaceholder(match.stage, 'home', matches, match)}
                             </span>
                             <TeamLogo team={match.home_team} initials={getTeamInitials(match.home_team?.name || 'H')} />
                           </div>
@@ -212,7 +212,7 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
                           <div className="flex-1 flex items-center justify-start gap-3 text-left">
                             <TeamLogo team={match.away_team} initials={getTeamInitials(match.away_team?.name || 'A')} />
                             <span className="font-bold text-slate-900 text-sm truncate">
-                              {match.away_team?.name || getTeamPlaceholder(match.stage, 'away', matches)}
+                              {match.away_team?.name || getTeamPlaceholder(match.stage, 'away', matches, match)}
                             </span>
                           </div>
                         </div>
@@ -260,7 +260,7 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
                           <div className="flex items-center justify-between w-full min-w-0 px-2">
                             <div className="flex-1 flex items-center justify-end gap-3 text-right">
                               <span className="font-bold text-slate-900 text-sm truncate">
-                                {match.home_team?.name || getTeamPlaceholder(match.stage, 'home', matches)}
+                                {match.home_team?.name || getTeamPlaceholder(match.stage, 'home', matches, match)}
                               </span>
                               <TeamLogo team={match.home_team} initials={getTeamInitials(match.home_team?.name || 'H')} />
                             </div>
@@ -287,7 +287,7 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
                             <div className="flex-1 flex items-center justify-start gap-3 text-left">
                               <TeamLogo team={match.away_team} initials={getTeamInitials(match.away_team?.name || 'A')} />
                               <span className="font-bold text-slate-900 text-sm truncate">
-                                {match.away_team?.name || getTeamPlaceholder(match.stage, 'away', matches)}
+                                {match.away_team?.name || getTeamPlaceholder(match.stage, 'away', matches, match)}
                               </span>
                             </div>
                           </div>

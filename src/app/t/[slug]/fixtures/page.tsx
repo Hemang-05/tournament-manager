@@ -25,6 +25,8 @@ interface Match {
   match_events?: any[];
   home_penalty_score?: number | null;
   away_penalty_score?: number | null;
+  placeholder_home?: string | null;
+  placeholder_away?: string | null;
 }
 
 export default async function FixturesPage({

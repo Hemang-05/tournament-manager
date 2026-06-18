@@ -163,8 +163,8 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
   const openModal = (match: any = null, previewIndex: number | null = null) => {
     setEditingMatch(match);
     setEditingPreviewIndex(previewIndex);
-    setHomeTeam(match?.home_team_id || '');
-    setAwayTeam(match?.away_team_id || '');
+    setHomeTeam(match?.home_team_id || match?.placeholder_home || '');
+    setAwayTeam(match?.away_team_id || match?.placeholder_away || '');
     setDate(match?.match_date ? match.match_date : '');
     setTime(match?.kick_off_time || '');
     setStatus(match?.status?.toLowerCase() || 'scheduled');
@@ -219,14 +219,26 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
     setGenerating(true);
     
     try {
+      const parseSelectedTeamOrPlaceholder = (val: string) => {
+        if (!val) return { teamId: null, placeholder: null };
+        const isTeam = teams.some((t: any) => t.id === val);
+        if (isTeam) return { teamId: val, placeholder: null };
+        return { teamId: null, placeholder: val };
+      };
+
+      const homeInfo = parseSelectedTeamOrPlaceholder(homeTeam);
+      const awayInfo = parseSelectedTeamOrPlaceholder(awayTeam);
+
       if (editingPreviewIndex !== null) {
         setGeneratedFixtures(prev => {
           if (!prev) return null;
           const copy = [...prev];
           copy[editingPreviewIndex] = {
             ...copy[editingPreviewIndex],
-            home_team_id: homeTeam || null,
-            away_team_id: awayTeam || null,
+            home_team_id: homeInfo.teamId,
+            away_team_id: awayInfo.teamId,
+            placeholder_home: homeInfo.placeholder,
+            placeholder_away: awayInfo.placeholder,
             match_date: date,
             kick_off_time: time,
             status: status.toLowerCase(),
@@ -242,8 +254,10 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
         const { error: updErr } = await supabase
           .from('matches')
           .update({
-            home_team_id: homeTeam || null,
-            away_team_id: awayTeam || null,
+            home_team_id: homeInfo.teamId,
+            away_team_id: awayInfo.teamId,
+            placeholder_home: homeInfo.placeholder,
+            placeholder_away: awayInfo.placeholder,
             match_date: date,
             kick_off_time: time,
             status: status.toLowerCase(),
@@ -257,8 +271,10 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
           .from('matches')
           .insert({
             tournament_id: tournament.id,
-            home_team_id: homeTeam || null,
-            away_team_id: awayTeam || null,
+            home_team_id: homeInfo.teamId,
+            away_team_id: awayInfo.teamId,
+            placeholder_home: homeInfo.placeholder,
+            placeholder_away: awayInfo.placeholder,
             match_date: date,
             kick_off_time: time,
             status: status.toLowerCase(),
@@ -1322,7 +1338,7 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                     <div className="flex-1 w-full grid grid-cols-3 items-center gap-4">
                       {/* Home team */}
                       <div className="text-right font-bold text-gray-900 truncate">
-                        {match.home_team?.name || getTeamPlaceholder(match.stage, 'home', matches)}
+                        {match.home_team?.name || getTeamPlaceholder(match.stage, 'home', matches, match)}
                       </div>
                       
                       {/* Matchday info / Score */}
@@ -1354,7 +1370,7 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                       
                       {/* Away team */}
                       <div className="font-bold text-gray-900 truncate">
-                        {match.away_team?.name || getTeamPlaceholder(match.stage, 'away', matches)}
+                        {match.away_team?.name || getTeamPlaceholder(match.stage, 'away', matches, match)}
                       </div>
                     </div>
 
@@ -1461,7 +1477,7 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                                     </div>
                                   </div>
                                   <div className="font-extrabold text-xs truncate">
-                                    {m.home_team?.name || getTeamPlaceholder(m.stage, 'home', matches)}
+                                    {m.home_team?.name || getTeamPlaceholder(m.stage, 'home', matches, m)}
                                   </div>
                                   <div className="text-[10px] text-gray-400 font-semibold my-0.5 text-center">
                                     {isCompleted ? (
@@ -1472,14 +1488,14 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                                           <span className="text-[8px] font-bold text-emerald-600 font-mono mt-0.5">
                                             Pen {m.home_penalty_score} - {m.away_penalty_score}
                                           </span>
-                                        )}
+                                         )}
                                       </span>
                                     ) : (
                                       <span>VS</span>
                                     )}
                                   </div>
                                   <div className="font-extrabold text-xs truncate">
-                                    {m.away_team?.name || getTeamPlaceholder(m.stage, 'away', matches)}
+                                    {m.away_team?.name || getTeamPlaceholder(m.stage, 'away', matches, m)}
                                   </div>
                                   {m.status?.toLowerCase() !== 'live' && m.status?.toLowerCase() !== 'completed' && (
                                     <button
@@ -1525,14 +1541,70 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Home Team</label>
                   <select value={homeTeam} onChange={e => handleHomeTeamChange(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-[#00D084]/40">
                     <option value="">Select Team (or TBD)</option>
-                    {teams.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    <optgroup label="Group Standings Placeholders">
+                      <option value="Winner Group A">Winner Group A</option>
+                      <option value="Runner Group A">Runner Group A</option>
+                      <option value="Winner Group B">Winner Group B</option>
+                      <option value="Runner Group B">Runner Group B</option>
+                      <option value="Winner Group C">Winner Group C</option>
+                      <option value="Runner Group C">Runner Group C</option>
+                      <option value="Winner Group D">Winner Group D</option>
+                      <option value="Runner Group D">Runner Group D</option>
+                    </optgroup>
+                    <optgroup label="Knockout Placeholders">
+                      <option value="Winner R16 Match 1">Winner R16 Match 1</option>
+                      <option value="Winner R16 Match 2">Winner R16 Match 2</option>
+                      <option value="Winner R16 Match 3">Winner R16 Match 3</option>
+                      <option value="Winner R16 Match 4">Winner R16 Match 4</option>
+                      <option value="Winner R16 Match 5">Winner R16 Match 5</option>
+                      <option value="Winner R16 Match 6">Winner R16 Match 6</option>
+                      <option value="Winner R16 Match 7">Winner R16 Match 7</option>
+                      <option value="Winner R16 Match 8">Winner R16 Match 8</option>
+                      <option value="Winner QF 1">Winner QF 1</option>
+                      <option value="Winner QF 2">Winner QF 2</option>
+                      <option value="Winner QF 3">Winner QF 3</option>
+                      <option value="Winner QF 4">Winner QF 4</option>
+                      <option value="Winner SF 1">Winner SF 1</option>
+                      <option value="Winner SF 2">Winner SF 2</option>
+                    </optgroup>
+                    <optgroup label="Teams">
+                      {teams.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </optgroup>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Away Team</label>
                   <select value={awayTeam} onChange={e => handleAwayTeamChange(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-[#00D084]/40">
                     <option value="">Select Team (or TBD)</option>
-                    {teams.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    <optgroup label="Group Standings Placeholders">
+                      <option value="Winner Group A">Winner Group A</option>
+                      <option value="Runner Group A">Runner Group A</option>
+                      <option value="Winner Group B">Winner Group B</option>
+                      <option value="Runner Group B">Runner Group B</option>
+                      <option value="Winner Group C">Winner Group C</option>
+                      <option value="Runner Group C">Runner Group C</option>
+                      <option value="Winner Group D">Winner Group D</option>
+                      <option value="Runner Group D">Runner Group D</option>
+                    </optgroup>
+                    <optgroup label="Knockout Placeholders">
+                      <option value="Winner R16 Match 1">Winner R16 Match 1</option>
+                      <option value="Winner R16 Match 2">Winner R16 Match 2</option>
+                      <option value="Winner R16 Match 3">Winner R16 Match 3</option>
+                      <option value="Winner R16 Match 4">Winner R16 Match 4</option>
+                      <option value="Winner R16 Match 5">Winner R16 Match 5</option>
+                      <option value="Winner R16 Match 6">Winner R16 Match 6</option>
+                      <option value="Winner R16 Match 7">Winner R16 Match 7</option>
+                      <option value="Winner R16 Match 8">Winner R16 Match 8</option>
+                      <option value="Winner QF 1">Winner QF 1</option>
+                      <option value="Winner QF 2">Winner QF 2</option>
+                      <option value="Winner QF 3">Winner QF 3</option>
+                      <option value="Winner QF 4">Winner QF 4</option>
+                      <option value="Winner SF 1">Winner SF 1</option>
+                      <option value="Winner SF 2">Winner SF 2</option>
+                    </optgroup>
+                    <optgroup label="Teams">
+                      {teams.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </optgroup>
                   </select>
                 </div>
               </div>

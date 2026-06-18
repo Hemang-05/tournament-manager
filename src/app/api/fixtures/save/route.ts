@@ -66,6 +66,8 @@ export async function POST(request: Request) {
       status: (f.status || 'scheduled').toLowerCase(),
       matchday: f.matchday || 1,
       stage: f.stage || 'League',
+      placeholder_home: f.placeholder_home || null,
+      placeholder_away: f.placeholder_away || null,
     }));
 
     if (toInsert.length > 0) {

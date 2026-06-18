@@ -16,6 +16,8 @@ interface BracketMatch {
   away_team?: { name: string; logo_url: string | null } | null;
   home_penalty_score?: number | null;
   away_penalty_score?: number | null;
+  placeholder_home?: string | null;
+  placeholder_away?: string | null;
 }
 
 interface BracketTreeProps {
@@ -169,8 +171,8 @@ export default function BracketTree({ matches, onMatchClick, isAdmin = false }: 
             <div className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Quarter-finals</div>
             {qfMatches.length > 0 ? (
               qfMatches.map((m, i) => {
-                const homeLabel = getTeamPlaceholder(m.stage, 'home', matches);
-                const awayLabel = getTeamPlaceholder(m.stage, 'away', matches);
+                const homeLabel = getTeamPlaceholder(m.stage, 'home', matches, m);
+                const awayLabel = getTeamPlaceholder(m.stage, 'away', matches, m);
                 return renderMatchCard(m, homeLabel, awayLabel);
               })
             ) : (
@@ -190,8 +192,8 @@ export default function BracketTree({ matches, onMatchClick, isAdmin = false }: 
             <div className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Semi-finals</div>
             {sfMatches.length > 0 ? (
               sfMatches.map((m, i) => {
-                const homeLabel = getTeamPlaceholder(m.stage, 'home', matches);
-                const awayLabel = getTeamPlaceholder(m.stage, 'away', matches);
+                const homeLabel = getTeamPlaceholder(m.stage, 'home', matches, m);
+                const awayLabel = getTeamPlaceholder(m.stage, 'away', matches, m);
                 return renderMatchCard(m, homeLabel, awayLabel);
               })
             ) : (

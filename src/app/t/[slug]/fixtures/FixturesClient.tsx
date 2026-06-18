@@ -5,6 +5,7 @@ import Link from 'next/image';
 import NextLink from 'next/link';
 import { Calendar, MapPin } from 'lucide-react';
 import MatchDetailModal from '@/components/public/MatchDetailModal';
+import { getTeamPlaceholder } from '@/lib/bracket';
 
 interface Team {
   id: string;
@@ -40,6 +41,8 @@ interface Match {
   status: string;
   venue_name?: string | null;
   match_events?: MatchEvent[];
+  placeholder_home?: string | null;
+  placeholder_away?: string | null;
 }
 
 interface FixturesClientProps {
@@ -212,7 +215,7 @@ export default function FixturesClient({
                             {/* Home Team */}
                             <div className="flex flex-1 items-center justify-end gap-3 text-right">
                               <span className="text-sm sm:text-base font-bold text-[#0F172A] line-clamp-1">
-                                {homeTeam?.name || "Home Team"}
+                                {homeTeam?.name || getTeamPlaceholder(match.stage, 'home', matches, match)}
                               </span>
                               <TeamLogo team={homeTeam} fallbackText={getTeamInitials(homeTeam?.name || "H")} />
                             </div>
@@ -234,7 +237,7 @@ export default function FixturesClient({
                             <div className="flex flex-1 items-center justify-start gap-3 text-left">
                               <TeamLogo team={awayTeam} fallbackText={getTeamInitials(awayTeam?.name || "A")} />
                               <span className="text-sm sm:text-base font-bold text-[#0F172A] line-clamp-1">
-                                {awayTeam?.name || "Away Team"}
+                                {awayTeam?.name || getTeamPlaceholder(match.stage, 'away', matches, match)}
                               </span>
                             </div>
                           </div>

@@ -1,5 +1,57 @@
 import { calculateStandings } from './standings';
 
+export function getTeamPlaceholder(stage: string, slot: 'home' | 'away', allMatches: { stage: string }[] = []) {
+  const stageLower = (stage || '').toLowerCase();
+  
+  if (stageLower.startsWith('quarter-final')) {
+    const qfNumMatch = stageLower.match(/\d+/);
+    const qfIndex = qfNumMatch ? parseInt(qfNumMatch[0]) - 1 : 0;
+    
+    // Check if there are R16 matches in the tournament
+    const hasR16 = allMatches.some(m => m.stage?.toLowerCase().startsWith('round of 16'));
+    if (hasR16) {
+      return slot === 'home' 
+        ? `Winner R16 Match ${qfIndex * 2 + 1}` 
+        : `Winner R16 Match ${qfIndex * 2 + 2}`;
+    } else {
+      // League + KO Group to QF mapping:
+      // QF 1: Winner Group A vs Runner-up Group B
+      // QF 2: Winner Group C vs Runner-up Group D
+      // QF 3: Winner Group B vs Runner-up Group A
+      // QF 4: Winner Group D vs Runner-up Group C
+      if (qfIndex === 0) return slot === 'home' ? 'Winner Group A' : 'Runner Group B';
+      if (qfIndex === 1) return slot === 'home' ? 'Winner Group C' : 'Runner Group D';
+      if (qfIndex === 2) return slot === 'home' ? 'Winner Group B' : 'Runner Group A';
+      if (qfIndex === 3) return slot === 'home' ? 'Winner Group D' : 'Runner Group C';
+    }
+  }
+  
+  if (stageLower.startsWith('semi-final')) {
+    const sfNumMatch = stageLower.match(/\d+/);
+    const sfIndex = sfNumMatch ? parseInt(sfNumMatch[0]) - 1 : 0;
+    
+    // Check if there are QF matches in the tournament
+    const hasQF = allMatches.some(m => m.stage?.toLowerCase().startsWith('quarter-final'));
+    if (hasQF) {
+      return slot === 'home' 
+        ? `Winner QF ${sfIndex * 2 + 1}` 
+        : `Winner QF ${sfIndex * 2 + 2}`;
+    } else {
+      // 2 groups (Group A, Group B) -> Semi-finals mapping
+      // SF 1: Winner Group A vs Runner Group B
+      // SF 2: Winner Group B vs Runner Group A
+      if (sfIndex === 0) return slot === 'home' ? 'Winner Group A' : 'Runner Group B';
+      if (sfIndex === 1) return slot === 'home' ? 'Winner Group B' : 'Runner Group A';
+    }
+  }
+  
+  if (stageLower === 'final') {
+    return slot === 'home' ? 'Winner SF 1' : 'Winner SF 2';
+  }
+  
+  return 'TBD';
+}
+
 // Progression map for knockout matches
 export const PROGRESSION_MAP: Record<string, { targetStage: string; slot: 'home' | 'away' }> = {
   // Round of 16 progression

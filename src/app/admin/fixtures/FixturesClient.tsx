@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
 import { uiToDbFormat } from '@/lib/tournament';
+import { getTeamPlaceholder } from '@/lib/bracket';
 import {
   Wand2,
   Plus,
@@ -1321,7 +1322,7 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                     <div className="flex-1 w-full grid grid-cols-3 items-center gap-4">
                       {/* Home team */}
                       <div className="text-right font-bold text-gray-900 truncate">
-                        {match.home_team?.name || 'TBD'}
+                        {match.home_team?.name || getTeamPlaceholder(match.stage, 'home', matches)}
                       </div>
                       
                       {/* Matchday info / Score */}
@@ -1353,7 +1354,7 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                       
                       {/* Away team */}
                       <div className="font-bold text-gray-900 truncate">
-                        {match.away_team?.name || 'TBD'}
+                        {match.away_team?.name || getTeamPlaceholder(match.stage, 'away', matches)}
                       </div>
                     </div>
 
@@ -1460,7 +1461,7 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                                     </div>
                                   </div>
                                   <div className="font-extrabold text-xs truncate">
-                                    {m.home_team?.name || 'TBD'}
+                                    {m.home_team?.name || getTeamPlaceholder(m.stage, 'home', matches)}
                                   </div>
                                   <div className="text-[10px] text-gray-400 font-semibold my-0.5 text-center">
                                     {isCompleted ? (
@@ -1478,7 +1479,7 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
                                     )}
                                   </div>
                                   <div className="font-extrabold text-xs truncate">
-                                    {m.away_team?.name || 'TBD'}
+                                    {m.away_team?.name || getTeamPlaceholder(m.stage, 'away', matches)}
                                   </div>
                                   {m.status?.toLowerCase() !== 'live' && m.status?.toLowerCase() !== 'completed' && (
                                     <button

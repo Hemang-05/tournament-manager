@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Edit2, CheckCircle2 } from 'lucide-react';
+import { getTeamPlaceholder } from '@/lib/bracket';
 
 interface BracketMatch {
   id: string;
@@ -167,7 +168,11 @@ export default function BracketTree({ matches, onMatchClick, isAdmin = false }: 
           <div className="flex flex-col gap-12 justify-center">
             <div className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Quarter-finals</div>
             {qfMatches.length > 0 ? (
-              qfMatches.map((m, i) => renderMatchCard(m, `Winner R16 Match ${i*2+1}`, `Winner R16 Match ${i*2+2}`))
+              qfMatches.map((m, i) => {
+                const homeLabel = getTeamPlaceholder(m.stage, 'home', matches);
+                const awayLabel = getTeamPlaceholder(m.stage, 'away', matches);
+                return renderMatchCard(m, homeLabel, awayLabel);
+              })
             ) : (
               // Placeholder columns
               Array.from({ length: 4 }).map((_, i) => (
@@ -185,8 +190,8 @@ export default function BracketTree({ matches, onMatchClick, isAdmin = false }: 
             <div className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Semi-finals</div>
             {sfMatches.length > 0 ? (
               sfMatches.map((m, i) => {
-                const homeLabel = qfMatches.length > 0 ? `Winner QF ${i*2+1}` : `Winner Pool ${String.fromCharCode(65 + i*2)}`;
-                const awayLabel = qfMatches.length > 0 ? `Winner QF ${i*2+2}` : `Runner-up Pool ${String.fromCharCode(66 - i*2)}`;
+                const homeLabel = getTeamPlaceholder(m.stage, 'home', matches);
+                const awayLabel = getTeamPlaceholder(m.stage, 'away', matches);
                 return renderMatchCard(m, homeLabel, awayLabel);
               })
             ) : (

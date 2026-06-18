@@ -305,6 +305,27 @@ export async function POST(request: Request) {
 
       // First knockout round slots
       for (let i = 0; i < roundsCount; i++) {
+        let placeholderHome = null;
+        let placeholderAway = null;
+
+        if (nextStage === 'Quarter-finals') {
+          if (i === 0) { placeholderHome = 'Winner Group A'; placeholderAway = 'Runner Group B'; }
+          else if (i === 1) { placeholderHome = 'Winner Group C'; placeholderAway = 'Runner Group D'; }
+          else if (i === 2) { placeholderHome = 'Winner Group B'; placeholderAway = 'Runner Group A'; }
+          else if (i === 3) { placeholderHome = 'Winner Group D'; placeholderAway = 'Runner Group C'; }
+        } else if (nextStage === 'Semi-finals') {
+          if (totalAdvancing <= 4) {
+            if (i === 0) { placeholderHome = 'Winner Group A'; placeholderAway = 'Runner Group B'; }
+            else if (i === 1) { placeholderHome = 'Winner Group B'; placeholderAway = 'Runner Group A'; }
+          } else {
+            placeholderHome = `Winner QF ${i * 2 + 1}`;
+            placeholderAway = `Winner QF ${i * 2 + 2}`;
+          }
+        } else if (nextStage === 'Final') {
+          placeholderHome = 'Winner SF 1';
+          placeholderAway = 'Winner SF 2';
+        }
+
         knockoutMatches.push({
           home_team_id: null,
           away_team_id: null,
@@ -313,6 +334,8 @@ export async function POST(request: Request) {
                  nextStage === 'Semi-finals' ? `Semi-final ${i + 1}` :
                  nextStage === 'Final' ? 'Final' :
                  `Round of 16 - Match ${i + 1}`,
+          placeholder_home: placeholderHome,
+          placeholder_away: placeholderAway,
         });
       }
 
@@ -326,11 +349,24 @@ export async function POST(request: Request) {
         else if (nextRoundsCount === 1) nextRoundStageName = 'Final';
 
         for (let i = 0; i < nextRoundsCount; i++) {
+          let placeholderHome = null;
+          let placeholderAway = null;
+
+          if (nextRoundStageName === 'Semi-final') {
+            placeholderHome = `Winner QF ${i * 2 + 1}`;
+            placeholderAway = `Winner QF ${i * 2 + 2}`;
+          } else if (nextRoundStageName === 'Final') {
+            placeholderHome = `Winner SF 1`;
+            placeholderAway = `Winner SF 2`;
+          }
+
           knockoutMatches.push({
             home_team_id: null,
             away_team_id: null,
             matchday: matchday,
             stage: nextRoundStageName === 'Final' ? 'Final' : `${nextRoundStageName} ${i + 1}`,
+            placeholder_home: placeholderHome,
+            placeholder_away: placeholderAway,
           });
         }
         nextRoundsCount /= 2;

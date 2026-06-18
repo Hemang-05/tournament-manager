@@ -134,7 +134,8 @@ export default function MatchDetailModal({
               <div className="font-mono text-3xl sm:text-4xl font-black text-[#00D084] tracking-tight bg-white/5 border border-white/15 px-5 py-2 rounded-xl shadow-inner leading-none">
                 {match.home_score ?? 0} - {match.away_score ?? 0}
               </div>
-              {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+              {match.home_score !== null && match.away_score !== null && match.home_score === match.away_score &&
+               match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
                match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
                 <div className="mt-1 text-[11px] font-bold text-emerald-500 font-mono bg-[#00D084]/5 px-2 py-0.5 rounded border border-[#00D084]/15">
                   Pen {match.home_penalty_score} - {match.away_penalty_score}

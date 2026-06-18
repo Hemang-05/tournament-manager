@@ -218,7 +218,8 @@ export default async function MatchDetailPage({
                 <div className="font-mono text-4xl sm:text-6xl font-black text-[#00D084] tracking-tight bg-white/5 border border-white/15 px-6 py-3 rounded-2xl shadow-inner">
                   {match.home_score} - {match.away_score}
                 </div>
-                {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+                {match.home_score !== null && match.away_score !== null && match.home_score === match.away_score &&
+                 match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
                  match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
                   <div className="mt-2 text-sm font-bold text-emerald-500 font-mono bg-white/5 px-3 py-1 rounded-xl border border-white/10">
                     Pen {match.home_penalty_score} - {match.away_penalty_score}

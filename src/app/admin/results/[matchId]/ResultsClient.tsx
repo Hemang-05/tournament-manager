@@ -42,18 +42,27 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
   const handleSaveResult = async () => {
     setSavingResult(true);
     try {
+      const isDraw = Number(homeScore) === Number(awayScore);
       const { error: saveErr } = await supabase.from('matches').update({
         home_score: homeScore,
         away_score: awayScore,
         status,
-        motm_player_id: motmId || null
+        motm_player_id: motmId || null,
+        ...(!isDraw ? { home_penalty_score: null, away_penalty_score: null } : {})
       }).eq('id', match.id);
 
       if (saveErr) throw saveErr;
 
+      if (!isDraw) {
+        await supabase
+          .from('match_events')
+          .delete()
+          .eq('match_id', match.id)
+          .in('type', ['penalty_scored', 'penalty_missed']);
+      }
+
       // Advancing knockout stage winners
       if (status?.toLowerCase() === 'completed') {
-        const isDraw = Number(homeScore) === Number(awayScore);
         if (isDraw) {
           alert('Match saved as completed draw. Redirecting to penalties to record the shootout.');
           router.push(`/admin/penalties?matchId=${match.id}`);
@@ -119,16 +128,25 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
     setSavingResult(true);
     setShowMotmModal(false);
     try {
+      const isDraw = Number(homeScore) === Number(awayScore);
       const { error: saveErr } = await supabase.from('matches').update({
         home_score: homeScore,
         away_score: awayScore,
         status: 'completed',
-        motm_player_id: motmPlayerId
+        motm_player_id: motmPlayerId,
+        ...(!isDraw ? { home_penalty_score: null, away_penalty_score: null } : {})
       }).eq('id', match.id);
 
       if (saveErr) throw saveErr;
 
-      const isDraw = Number(homeScore) === Number(awayScore);
+      if (!isDraw) {
+        await supabase
+          .from('match_events')
+          .delete()
+          .eq('match_id', match.id)
+          .in('type', ['penalty_scored', 'penalty_missed']);
+      }
+
       if (isDraw) {
         alert('Match regular time finished as a draw. Redirecting to penalties to record the shootout.');
         router.push(`/admin/penalties?matchId=${match.id}`);
@@ -352,12 +370,13 @@ export default function ResultsClient({ initialMatch, initialEvents, players }: 
                   className="w-16 h-20 text-4xl font-bold text-center bg-white/10 text-white rounded-lg border border-white/20 focus:outline-none focus:border-[#00D084] focus:ring-1 focus:ring-[#00D084] transition-all"
                 />
               </div>
-              {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
-               match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
-                <div className="text-xs font-bold text-emerald-400 font-mono bg-white/10 px-2 py-0.5 rounded border border-white/20 mt-1">
-                  Pen {match.home_penalty_score} - {match.away_penalty_score}
-                </div>
-              )}
+               {Number(homeScore) === Number(awayScore) &&
+                match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+                match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
+                 <div className="text-xs font-bold text-emerald-400 font-mono bg-white/10 px-2 py-0.5 rounded border border-white/20 mt-1">
+                   Pen {match.home_penalty_score} - {match.away_penalty_score}
+                 </div>
+               )}
             </div>
             
             <div className="flex flex-col items-center gap-2 w-32">

@@ -271,7 +271,8 @@ export default function TournamentViewClient({ tournament, teams, matches, playe
                               }`}>
                                 {match.home_score ?? 0} - {match.away_score ?? 0}
                               </div>
-                              {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+                              {match.home_score !== null && match.away_score !== null && match.home_score === match.away_score &&
+                               match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
                                match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
                                  <span className="mt-1 text-[11px] font-bold text-emerald-600 font-mono">
                                    Pen {match.home_penalty_score} - {match.away_penalty_score}

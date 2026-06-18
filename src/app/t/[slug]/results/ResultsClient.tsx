@@ -233,7 +233,8 @@ export default function ResultsClient({
                               <div className="font-mono text-xl sm:text-2xl font-black bg-[#0A1628] text-[#00D084] px-4 py-2 rounded-xl leading-none tracking-wider shadow-inner">
                                 {match.home_score} - {match.away_score}
                               </div>
-                              {match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
+                              {match.home_score !== null && match.away_score !== null && match.home_score === match.away_score &&
+                                match.home_penalty_score !== null && match.home_penalty_score !== undefined &&
                                 match.away_penalty_score !== null && match.away_penalty_score !== undefined && (
                                  <span className="mt-1 text-[11px] font-bold text-emerald-600 font-mono">
                                    Pen {match.home_penalty_score} - {match.away_penalty_score}

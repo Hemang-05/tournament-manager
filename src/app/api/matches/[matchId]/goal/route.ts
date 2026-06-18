@@ -79,10 +79,27 @@ export async function POST(
         }
       }
 
+      const newHomeScore = scoreUpdate.hasOwnProperty('home_score') ? scoreUpdate.home_score : match.home_score || 0;
+      const newAwayScore = scoreUpdate.hasOwnProperty('away_score') ? scoreUpdate.away_score : match.away_score || 0;
+      const isDraw = newHomeScore === newAwayScore;
+
+      const updatePayload = {
+        ...scoreUpdate,
+        ...(!isDraw ? { home_penalty_score: null, away_penalty_score: null } : {})
+      };
+
       await supabase
         .from('matches')
-        .update(scoreUpdate)
+        .update(updatePayload)
         .eq('id', params.matchId);
+
+      if (!isDraw) {
+        await supabase
+          .from('match_events')
+          .delete()
+          .eq('match_id', params.matchId)
+          .in('type', ['penalty_scored', 'penalty_missed']);
+      }
 
       // 4. Update player goals_scored for regular goals
       if (eventTypeLower === 'goal') {
@@ -212,10 +229,27 @@ export async function DELETE(
 
     // 4. Reverse score changes
     if (eventTypeLower === 'goal') {
+      let newHomeScore = match.home_score || 0;
+      let newAwayScore = match.away_score || 0;
       if (eventTeamId === match.home_team_id) {
-        await supabase.from('matches').update({ home_score: Math.max(0, (match.home_score || 0) - 1) }).eq('id', params.matchId);
+        newHomeScore = Math.max(0, newHomeScore - 1);
       } else {
-        await supabase.from('matches').update({ away_score: Math.max(0, (match.away_score || 0) - 1) }).eq('id', params.matchId);
+        newAwayScore = Math.max(0, newAwayScore - 1);
+      }
+      const isDraw = newHomeScore === newAwayScore;
+      const updatePayload = {
+        home_score: newHomeScore,
+        away_score: newAwayScore,
+        ...(!isDraw ? { home_penalty_score: null, away_penalty_score: null } : {})
+      };
+      await supabase.from('matches').update(updatePayload).eq('id', params.matchId);
+
+      if (!isDraw) {
+        await supabase
+          .from('match_events')
+          .delete()
+          .eq('match_id', params.matchId)
+          .in('type', ['penalty_scored', 'penalty_missed']);
       }
 
       // Decrement player goals
@@ -226,10 +260,27 @@ export async function DELETE(
         }
       }
     } else if (eventTypeLower === 'own goal') {
+      let newHomeScore = match.home_score || 0;
+      let newAwayScore = match.away_score || 0;
       if (eventTeamId === match.home_team_id) {
-        await supabase.from('matches').update({ away_score: Math.max(0, (match.away_score || 0) - 1) }).eq('id', params.matchId);
+        newAwayScore = Math.max(0, newAwayScore - 1);
       } else {
-        await supabase.from('matches').update({ home_score: Math.max(0, (match.home_score || 0) - 1) }).eq('id', params.matchId);
+        newHomeScore = Math.max(0, newHomeScore - 1);
+      }
+      const isDraw = newHomeScore === newAwayScore;
+      const updatePayload = {
+        home_score: newHomeScore,
+        away_score: newAwayScore,
+        ...(!isDraw ? { home_penalty_score: null, away_penalty_score: null } : {})
+      };
+      await supabase.from('matches').update(updatePayload).eq('id', params.matchId);
+
+      if (!isDraw) {
+        await supabase
+          .from('match_events')
+          .delete()
+          .eq('match_id', params.matchId)
+          .in('type', ['penalty_scored', 'penalty_missed']);
       }
     } else if (eventTypeLower === 'yellow card' && eventPlayerId) {
       const { data: player } = await supabase.from('players').select('yellow_cards').eq('id', eventPlayerId).single();

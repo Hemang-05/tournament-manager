@@ -163,8 +163,37 @@ export default function FixturesClient({ tournament, teamsCount, initialMatches,
   const openModal = (match: any = null, previewIndex: number | null = null) => {
     setEditingMatch(match);
     setEditingPreviewIndex(previewIndex);
-    setHomeTeam(match?.home_team_id || match?.placeholder_home || '');
-    setAwayTeam(match?.away_team_id || match?.placeholder_away || '');
+    
+    let initialHome = '';
+    if (match) {
+      if (match.home_team_id) {
+        initialHome = match.home_team_id;
+      } else if (match.placeholder_home) {
+        initialHome = match.placeholder_home;
+      } else {
+        const resolved = getTeamPlaceholder(match.stage, 'home', matches, match);
+        if (resolved && resolved !== 'TBD') {
+          initialHome = resolved;
+        }
+      }
+    }
+    
+    let initialAway = '';
+    if (match) {
+      if (match.away_team_id) {
+        initialAway = match.away_team_id;
+      } else if (match.placeholder_away) {
+        initialAway = match.placeholder_away;
+      } else {
+        const resolved = getTeamPlaceholder(match.stage, 'away', matches, match);
+        if (resolved && resolved !== 'TBD') {
+          initialAway = resolved;
+        }
+      }
+    }
+
+    setHomeTeam(initialHome);
+    setAwayTeam(initialAway);
     setDate(match?.match_date ? match.match_date : '');
     setTime(match?.kick_off_time || '');
     setStatus(match?.status?.toLowerCase() || 'scheduled');
